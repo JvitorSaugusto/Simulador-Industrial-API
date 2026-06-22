@@ -1,0 +1,30 @@
+# Ambiente Virtual
+venv/
+.venv/
+env/
+ENV/
+
+# Python (Arquivos compilados e cache)
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Banco de Dados Local (SQLite)
+*.sqlite3
+*.db
+
+# Configurações de IDEs (VS Code e PyCharm)
+.vscode/
+.idea/
+
+# Arquivos do Sistema Operacional (Windows / macOS)
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Variáveis de Ambiente (Segurança)
+.env
