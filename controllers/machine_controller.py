@@ -1,4 +1,3 @@
-from click.utils import R
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
