@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors.exceptions import NotFoundException
 from models.machine_models import MachineModel
 from schemas.machine_schema import MachineRequestSchema, MachineUpdateSchema
 
@@ -30,7 +31,11 @@ class MachineService:
         return machines
     
     async def get_details_machine(self, machine_id: int) -> MachineModel | None:
-        return await self.db.get(MachineModel, machine_id)
+        machine = await self.db.get(MachineModel, machine_id)
+        
+        if not machine:
+            raise NotFoundException("Máquina")
+        return machine
     
     async def update_machine(self, payload: MachineUpdateSchema, machine_id: int) -> MachineModel | None:
         machine_data = await self.db.get(MachineModel, machine_id)
