@@ -1,7 +1,6 @@
 from fastapi import FastAPI
+from errors.handlers import register_exception_handlers
 
-app = FastAPI()
+app = FastAPI(title="Simulador Industrial")
 
-@app.get(("/"))
-def root():
-    return {"status": "Simulador Industrial API rodando"}
+register_exception_handlers(app)
