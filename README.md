@@ -1,107 +1,237 @@
-```markdown
-# 🏭 Industrial Simulator & OEE Tracker API
+# 🏭 Industrial Digital Twin API
 
-Uma API assíncrona de alta performance desenvolvida em Python para simulação de linhas de produção industrial, monitoramento de status de máquinas em tempo real e rastreamento automatizado de ociosidade (*Idle Time* / *Down Time*).
+Uma API assíncrona de alta performance desenvolvida em **Python** para simulação de ambientes industriais, gerenciamento de linhas de produção, monitoramento de máquinas e cálculo automatizado de indicadores de eficiência (**OEE - Overall Equipment Effectiveness**).
 
-O core do sistema conta com um motor de simulação dinâmica rodando em segundo plano (via tarefas agendadas), capaz de mimetizar o desgaste de componentes físicos de uma fábrica, calcular a eficiência global dos ativos (**OEE - Overall Equipment Effectiveness**) e expor métricas cruciais para tomadas de decisão gerenciais.
-
----
-
-## 💡 Origem e Contexto do Projeto
-
-Este projeto não é apenas um exercício teórico. A arquitetura e as regras de negócio aqui implementadas foram diretamente inspiradas na minha **vivência prática no desenvolvimento de sistemas industriais reais** (como o ecossistema SOLVEOEE). 
-
-Trazer as dores reais do chão de fábrica para o código me permitiu desenhar uma solução que resolve problemas complexos de engenharia de software e automação, tais como:
-* **Concorrência e Alta Disponibilidade:** Lidando com múltiplos sensores virtuais enviando dados simultaneamente através de rotas assíncronas (`async/await`).
-* **Consistência de Estados Complexos:** Rastrear exatamente quando uma linha entra em ociosidade pelo simples fato de não haver nenhuma Ordem de Produção (OP) ativa vinculada a ela.
-* **Processamento Assíncrono Pesado:** Desacoplar a lógica da API web das simulações contínuas de desgaste e falha de maquinário utilizando filas de mensageria.
+O projeto implementa um **Digital Twin** (gêmeo digital) de uma fábrica, reproduzindo virtualmente o comportamento de uma linha de produção através de um motor de simulação executado em segundo plano. Durante a execução da simulação, o sistema é capaz de produzir peças, gerar falhas, realizar manutenções, calcular indicadores industriais e disponibilizar informações para dashboards e análises gerenciais.
 
 ---
 
-## ⚙️ O Motor de Simulação (Background Ecosystem)
+# 💡 Origem e Contexto do Projeto
 
-Para dar vida ao monitoramento, o projeto implementa um ecossistema robusto baseado em **Celery** e **Redis**, que atua como o "coração pulsante" da fábrica virtual:
+Este projeto foi inspirado na minha experiência prática desenvolvendo sistemas para ambientes industriais.
 
-1. **Simulação de Desgaste (`Wear Level`):** Workers assíncronos rodam periodicamente incrementando o nível de desgaste das máquinas com base em suas taxas de falha base e tempo em produção.
-2. **Geração de Eventos Estocásticos:** O sistema simula paradas imprevistas (quebras ou falhas micro-paradas) de forma automatizada com base na saúde física atual de cada máquina.
-3. **Cálculo de Ociosidade em Tempo Real:** Rotinas de background cruzam os horários de funcionamento das máquinas com o status das Ordens de Produção (OP), calculando automaticamente as janelas de *Down Time* e deixando os eventos prontos para serem classificados e justificados pelos operadores na interface.
----
+Diversas regras de negócio, comportamentos e conceitos implementados aqui foram baseados em situações reais encontradas durante o desenvolvimento de soluções para monitoramento de produção, rastreamento de eventos industriais e cálculo de indicadores de desempenho.
 
-##  Tecnologias Utilizadas
-
-* **Python 3.11+**
-* **FastAPI**: Framework web de alta performance para a construção de APIs.
-* **SQLAlchemy (Async)**: ORM mapeado para operações assíncronas com o banco de dados.
-* **Pydantic V2**: Validação de dados e mapeamento de Schemas (utilizando `model_config`).
-* **Celery & Redis**: Orquestração e processamento de tarefas em segundo plano (como incremento de desgaste de máquinas e checagem de ociosidade).
-* **PostgreSQL / SQLite**: Banco de dados relacional para persistência dos dados industriais.
+O objetivo é criar uma arquitetura próxima à encontrada em sistemas industriais modernos, utilizando boas práticas de engenharia de software e processamento assíncrono.
 
 ---
 
-##  Arquitetura e Padrões de Projeto
+# 🏭 O que a API Simula
 
-A API foi desenhada seguindo as melhores práticas de mercado, priorizando o desacoplamento e a consistência dos dados:
+A fábrica virtual é composta por diversos elementos que interagem continuamente.
 
-* **Padrão por Feature/Módulo**: Divisão limpa de responsabilidades entre `Models`, `Schemas`, `Services` e `Routers`.
-* **Injeção de Dependência Encadeada**: Services injetados via construtor (`__init__`), permitindo alta testabilidade.
-* **Gerenciamento de Transação Única (Atomicidade)**: Operações compostas (ex: parar uma máquina e gerar um evento de Down Time) compartilham a mesma sessão e utilizam um único `commit` ao final do fluxo (*princípio do tudo ou nada*).
-* **Centralização de Erros**: Tratamento global de exceções customizadas através de Handlers isolados no FastAPI.
+Durante a simulação o sistema é capaz de representar:
+
+* Linhas de Produção
+* Máquinas Industriais
+* Ordens de Produção (Production Orders)
+* Operadores
+* Manutenções Preventivas e Corretivas
+* Falhas Aleatórias
+* Eventos de Downtime
+* Apontamentos de Produção
+* Indicadores OEE
+* Relatórios Gerenciais
+
+---
+
+# ⚙️ Motor de Simulação
+
+O coração da aplicação é um ecossistema executado em segundo plano utilizando **Celery** e **Redis**.
+
+As tarefas assíncronas simulam continuamente o funcionamento da fábrica, sendo responsáveis por:
+
+* Simular produção das linhas;
+* Atualizar velocidade atual de produção;
+* Incrementar desgaste das máquinas;
+* Gerar falhas probabilísticas;
+* Atualizar tempos de operação;
+* Executar manutenções;
+* Criar apontamentos de produção;
+* Calcular automaticamente indicadores de OEE;
+* Atualizar métricas utilizadas pelos dashboards.
+
+Toda a simulação utiliza regras probabilísticas baseadas em **Random**, fazendo com que cada execução da fábrica seja diferente da anterior.
 
 ---
 
-##  Como Instalar e Rodar o Projeto
+# 🏭 Modelo da Produção
 
-### 1. Clonar o Repositório
-```bash
-git clone [https://github.com/seu-usuario/nome-do-repositorio.git](https://github.com/seu-usuario/nome-do-repositorio.git)
-cd nome-do-repositorio
+A arquitetura foi baseada em um ambiente industrial onde as **Ordens de Produção são executadas por Linhas de Produção**, e não diretamente por máquinas individuais.
 
-```
+## Production Line
 
-### 2. Configurar o Ambiente Virtual (venv)
+Cada linha representa uma célula produtiva composta por diversas máquinas.
 
-```bash
-python -m venv venv
-# No Windows:
-.\venv\Scripts\activate
-# No Linux/Mac:
-source venv/bin/activate
+A linha mantém informações relacionadas ao seu estado atual, como:
 
-```
+* Meta de OEE
+* Capacidade ideal de produção
+* Velocidade atual de produção
+* Tempo atual de operação
+* Tempo total de operação
 
-### 3. Instalar as Dependências
-
-```bash
-pip install -r requirements.txt
-
-```
-
-### 4. Rodar a API (FastAPI)
-
-```bash
-fastapi dev main.py
-# Ou usando uvicorn:
-uvicorn main:app --reload
-
-```
-
-A documentação interativa da API ficará disponível em: `http://localhost:8000/docs`
-
-### 5. Rodar o Worker do Celery (Background Tasks)
-
-Certifique-se de que o Redis (ou o broker de sua escolha) está rodando e execute:
-
-```bash
-celery -A tasks.celery_app worker --loglevel=info
-
-```
+Seu status é calculado dinamicamente a partir das máquinas que a compõem e da existência de uma Ordem de Produção ativa.
 
 ---
-# 📊 Entidades Principais da Regra de Negócio
-#* **Linha de Produção (Production Line):** Agrupa um conjunto de máquinas e gerencia o fluxo de fabricação. É o coração do cálculo de ociosidade (*Idle Time*) do sistema quando não há Ordens de Produção ativas.
-* **Máquina (Machine):** Unidade fabril individual. Possui métricas como taxa de falha base, nível de desgaste (`wear_level` incrementado via Celery) e controle estrito de timestamps de atividade (`last_start_time`, `last_stop_time`).
-* **Ordem de Produção - OP (Production Order):** Dita o planejamento da fábrica. Controla o status real da produção (Pendente, Em Produção, Finalizado) e armazena os registros cruciais de tempo real de início e fim (`actual_start`, `actual_end`).
-* **Eventos de Parada (Down Time Events):** Gerados automaticamente pelo sistema (de forma não classificada) sempre que uma máquina interrompe sua atividade. Permite que operadores entrem no sistema posteriormente para justificar o motivo (*reason*) e adicionar observações (*comments*).
-* **Métricas de OEE (Overall Equipment Effectiveness):** O indicador consolidado calculado de forma automatizada pelo sistema, avaliando a Disponibilidade, Performance e Qualidade das linhas de produção com base no histórico de OP e Down Times.
 
-* ```
+## Machine
+
+Cada linha possui diversas máquinas.
+
+As máquinas são responsáveis por:
+
+* Produzir peças;
+* Sofrer desgaste gradual;
+* Gerar falhas;
+* Entrar em manutenção.
+
+Caso qualquer máquina apresente uma falha crítica, toda a linha de produção é interrompida automaticamente.
+
+---
+
+## Production Order (OP)
+
+Cada Ordem de Produção representa uma missão temporária de fabricação.
+
+Ela contém informações como:
+
+* Produto
+* Quantidade planejada
+* Quantidade produzida
+* Quantidade aprovada
+* Quantidade rejeitada
+* Linha responsável pela execução
+
+Quando a quantidade planejada é atingida, a OP é finalizada automaticamente e a linha retorna ao estado **Idle**.
+
+---
+
+## Simulação da Produção
+
+Durante a execução de uma OP, o simulador reproduz a passagem de peças pela linha de produção.
+
+A cada ciclo de simulação o sistema pode:
+
+* Produzir novas peças;
+* Classificar peças como aprovadas ou rejeitadas;
+* Variar a velocidade de produção;
+* Atualizar o desgaste das máquinas;
+* Verificar ocorrência de falhas;
+* Atualizar indicadores da OP.
+
+Esses eventos são executados continuamente enquanto existir uma Ordem de Produção ativa.
+
+---
+
+## Production Records
+
+O sistema gera apontamentos periódicos da produção.
+
+Esses registros representam snapshots da execução da fábrica e serão utilizados para:
+
+* Auditoria;
+* Histórico da produção;
+* Dashboards;
+* Relatórios;
+* Cálculo dos indicadores de desempenho.
+
+---
+
+# 📊 Cálculo do OEE
+
+Durante toda a execução da Ordem de Produção o sistema calcula automaticamente os três pilares do OEE:
+
+* Availability
+* Performance
+* Quality
+
+A partir desses indicadores é obtido o OEE global da produção.
+
+---
+
+# 🏛️ Arquitetura
+
+O projeto foi desenvolvido utilizando uma arquitetura modular baseada em responsabilidades.
+
+Cada domínio possui sua própria estrutura contendo:
+
+* Models
+* Schemas
+* Services
+* Routers
+* Enums
+* Validators
+* Exceptions
+* Background Tasks
+
+A lógica de negócio permanece centralizada na camada de **Services**, enquanto os **Routers** são responsáveis apenas pela comunicação HTTP e os **Schemas** pela validação dos dados.
+
+Entre as práticas adotadas destacam-se:
+
+* Arquitetura modular por domínio;
+* Injeção de dependências;
+* Separação entre Schemas de Request e Response;
+* Enumeração utilizando `TextChoices`/Enums;
+* Processamento assíncrono com Celery;
+* Gerenciamento transacional;
+* Validação centralizada;
+* Tratamento global de exceções.
+
+---
+
+# 🚀 Tecnologias Utilizadas
+
+* Python 3.13+
+* FastAPI
+* SQLAlchemy (Async)
+* Pydantic V2
+* PostgreSQL
+* Alembic
+* Celery
+* Redis
+* Docker
+* Docker Compose
+* Ruff
+* Faker
+
+---
+
+# 📈 Funcionalidades
+
+* CRUD de Linhas de Produção
+* CRUD de Máquinas
+* CRUD de Operadores
+* CRUD de Ordens de Produção
+* CRUD de Manutenções
+* Registro de Falhas
+* Registro de Downtime
+* Simulação de Produção
+* Simulação de Desgaste
+* Simulação de Falhas
+* Geração de Apontamentos
+* Cálculo Automático de OEE
+* Dashboard Industrial
+* Relatórios Gerenciais
+* API REST Documentada
+
+---
+
+# 🎯 Objetivos do Projeto
+
+Este projeto tem como objetivo aprofundar conhecimentos em:
+
+* Arquitetura de Software
+* FastAPI
+* SQLAlchemy Assíncrono
+* Celery
+* Redis
+* Sistemas Distribuídos
+* Processamento Assíncrono
+* Simulação Baseada em Eventos
+* Engenharia de Software
+* Modelagem de Sistemas Industriais
+* APIs REST de Alta Performance
+* Boas Práticas de Desenvolvimento Backend
+
+Eu só faria uma última observação: **esse README está em um nível bem acima de um CRUD comum**. Para deixá-lo ainda mais forte para recrutadores, eu adicionaria futuramente uma seção com um diagrama da arquitetura (Production Line → Machines → Production Order → Celery → OEE → Dashboard) e alguns GIFs da aplicação funcionando. Isso costuma causar uma ótima impressão no GitHub.
