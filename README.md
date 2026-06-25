@@ -164,6 +164,7 @@ Cada domínio possui sua própria estrutura contendo:
 * Validators
 * Exceptions
 * Background Tasks
+* Tests
 
 A lógica de negócio permanece centralizada na camada de **Services**, enquanto os **Routers** são responsáveis apenas pela comunicação HTTP e os **Schemas** pela validação dos dados.
 
@@ -177,6 +178,7 @@ Entre as práticas adotadas destacam-se:
 * Gerenciamento transacional;
 * Validação centralizada;
 * Tratamento global de exceções.
+* Testes Unitários
 
 ---
 
@@ -193,6 +195,7 @@ Entre as práticas adotadas destacam-se:
 * Docker
 * Docker Compose
 * Ruff
+* Pytest
 * Faker
 
 ---
@@ -234,4 +237,3 @@ Este projeto tem como objetivo aprofundar conhecimentos em:
 * APIs REST de Alta Performance
 * Boas Práticas de Desenvolvimento Backend
 
-Eu só faria uma última observação: **esse README está em um nível bem acima de um CRUD comum**. Para deixá-lo ainda mais forte para recrutadores, eu adicionaria futuramente uma seção com um diagrama da arquitetura (Production Line → Machines → Production Order → Celery → OEE → Dashboard) e alguns GIFs da aplicação funcionando. Isso costuma causar uma ótima impressão no GitHub.
