@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from enums.factory_enums import LineStatusEnum
-from errors.exceptions import NotFoundException
 from services.production_line_service import ProductionLineService
 from schemas.production_line_schema import ProductionLineRequestSchema, ProductionLineResponseSchema, ProductionLineUpdateSchema
 

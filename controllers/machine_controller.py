@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from errors.exceptions import NotFoundException
 from schemas.machine_schema import MachineRequestSchema, MachineResponseSchema, MachineUpdateSchema
 from services.machine_service import MachineService
 
