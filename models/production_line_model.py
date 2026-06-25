@@ -2,8 +2,9 @@ from decimal import Decimal
 from sqlalchemy import String, Integer, Text, Numeric, Float, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
-from enums.production_line_enums import LineStatusEnum
+from enums.factory_enums import LineStatusEnum
 from models.machine_models import MachineModel
+from models.production_order_model import ProductionOrderModel
 
 
 class ProductionLineModel(Base):
@@ -19,3 +20,4 @@ class ProductionLineModel(Base):
     total_runtime_minutes: Mapped [int]  = mapped_column(Integer)
     status: Mapped[LineStatusEnum] = mapped_column(SQLEnum(LineStatusEnum), default=LineStatusEnum.IDLE, nullable=False)
     machines: Mapped[MachineModel | None] = relationship(back_populates="production_line")
+    production_orders: Mapped[ProductionOrderModel | None] = relationship(back_populates="production_line")
