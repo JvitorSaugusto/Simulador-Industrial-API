@@ -1,7 +1,7 @@
 from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from enums.production_line_enums import LineStatusEnum
+from enums.factory_enums import LineStatusEnum
 from schemas.production_line_schema import ProductionLineRequestSchema, ProductionLineUpdateSchema
 from models.production_line_model import ProductionLineModel
 

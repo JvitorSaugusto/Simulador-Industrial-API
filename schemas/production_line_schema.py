@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from enums.production_line_enums import LineStatusEnum
+from enums.factory_enums import LineStatusEnum
 from decimal import Decimal
 
 
