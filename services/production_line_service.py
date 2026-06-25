@@ -2,6 +2,7 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from enums.factory_enums import LineStatusEnum
+from errors.exceptions import NotFoundException
 from schemas.production_line_schema import ProductionLineRequestSchema, ProductionLineUpdateSchema
 from models.production_line_model import ProductionLineModel
 
@@ -31,14 +32,19 @@ class ProductionLineService:
     
         return production_lines
     
-    async def get_details_line(self, line_id: int) -> ProductionLineModel | None:    
-        return await self.db.get(ProductionLineModel, line_id)
+    async def get_details_line(self, line_id: int) -> ProductionLineModel | None:
+        line = await self.db.get(ProductionLineModel, line_id)
+        
+        if not line:
+            raise NotFoundException("Linha de Produção")
+        
+        return line
     
     async def update_line(self, line_id: int, payload: ProductionLineUpdateSchema) -> ProductionLineModel | None:
         line_data = await self.db.get(ProductionLineModel, line_id)
         
         if not line_data:
-            return None
+            raise NotFoundException("Linha de Produção")
         
         update_data = payload.model_dump(exclude_unset=True)
         
@@ -52,6 +58,9 @@ class ProductionLineService:
     
     async def delete_line(self, line_id: int) -> bool:
         line = await self.db.get(ProductionLineModel, line_id)
+        
+        if not line:
+            raise NotFoundException("Linha de Produção")
         
         if line:
             await self.db.delete(line)

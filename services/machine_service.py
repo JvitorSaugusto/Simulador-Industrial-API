@@ -39,6 +39,10 @@ class MachineService:
     
     async def update_machine(self, payload: MachineUpdateSchema, machine_id: int) -> MachineModel | None:
         machine_data = await self.db.get(MachineModel, machine_id)
+        
+        if not machine_data:
+            raise NotFoundException("Máquina")
+
         updated_data = payload.model_dump(exclude_unset=True)
         
         for key, value in updated_data:
