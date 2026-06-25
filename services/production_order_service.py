@@ -11,8 +11,7 @@ from enums.factory_enums import ProductionOrderEnum
 from errors.errors_domain.production_order_errors import ProductionOrderInvalidStatusException
 from errors.exceptions import NotFoundException
 from models.production_order_model import ProductionOrderModel
-from schemas.production_line_schema import ProductionLineUpdateSchema
-from schemas.production_order_schema import ProductionOrderRequestSchema
+from schemas.production_order_schema import ProductionOrderRequestSchema, ProductionOrderUpdateSchema
 
 
 class ProductionOrderService:
@@ -44,7 +43,7 @@ class ProductionOrderService:
             raise NotFoundException("Ordem de Produção")
         return op
     
-    async def update_op(self, payload: ProductionLineUpdateSchema, op_id: int) -> ProductionOrderModel | None:
+    async def update_op(self, payload: ProductionOrderUpdateSchema, op_id: int) -> ProductionOrderModel | None:
         op_data = await self.db.get(ProductionOrderModel, op_id)
         updated_data = payload.model_dump(exclude_unset=True)
         
@@ -71,3 +70,14 @@ class ProductionOrderService:
         await self.db.refresh(op_data)
         
         return op_data
+    
+    async def delete_op(self, op_id: int) -> bool:
+        op = await self.db.get(ProductionOrderModel, op_id)
+        
+        if op:
+            await self.db.delete(op)
+            await self.db.commit()
+            return True
+        return False
+        
+        
