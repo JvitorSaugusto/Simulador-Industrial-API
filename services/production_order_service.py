@@ -18,6 +18,17 @@ class ProductionOrderService:
     def __init__(self, db: AsyncSession = Depends(get_db)):
         self.db = db
         
+    def _validate_op_status(self, op_data: ProductionOrderModel, current_status: str, new_status: str):
+        if current_status == ProductionOrderEnum.PENDING and new_status == ProductionOrderEnum.FINISHED:
+                raise ProductionOrderInvalidStatusException(op_data.code)
+            
+        if current_status == ProductionOrderEnum.PRODUCTION:
+            op_data.actual_start = datetime.now(timezone.utc)
+        elif current_status == ProductionOrderEnum.FINISHED:
+            op_data.actual_end = datetime.now(timezone.utc)
+            
+        return op_data
+        
     async def create_op(self, payload: ProductionOrderRequestSchema) -> ProductionOrderModel:
         new_op = ProductionOrderModel(**payload.model_dump())
         unique_hash = uuid.uuid4().hex[:8].upper()
@@ -50,21 +61,16 @@ class ProductionOrderService:
         if not op_data:
             raise NotFoundException("Ordem de Produção")
         
+        current_status = op_data.status
+        
         for key, value in updated_data:
             if key == "status":
-                updated_status = value
-        
+                new_status = value
 
-        if op_data.status == ProductionOrderEnum.PENDING and updated_status == ProductionOrderEnum.FINISHED:
-                raise ProductionOrderInvalidStatusException(op_data.code)
+        op_data = self._validate_op_status(op_data=op_data, current_status=current_status, new_status=new_status)
             
         for key, value in updated_data:
             setattr(op_data, key, value)
-            
-        if op_data.status == ProductionOrderEnum.PRODUCTION:
-            op_data.actual_start = datetime.now(timezone.utc)
-        elif op_data.status == ProductionOrderEnum.FINISHED:
-            op_data.actual_end = datetime.now(timezone.utc)
         
         await self.db.commit()
         await self.db.refresh(op_data)
