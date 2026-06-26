@@ -23,14 +23,17 @@ class ProductionOrderResponseSchema(BaseModel):
     status: ProductionOrderEnum
     planned_start: datetime
     planned_end: datetime
-    actual_start: datetime
-    actual_end: datetime
+    actual_start: datetime | None
+    actual_end: datetime | None
     production_line_id: int
     
+    model_config = {
+        "from_attributes": True
+    }
     
 class ProductionOrderUpdateSchema(BaseModel):
-    product_name: str
-    quantity_planned: int
-    status: ProductionOrderEnum
-    planned_start: datetime
-    planned_end: datetime
+    product_name: str | None = None
+    quantity_planned: int | None = None
+    status: ProductionOrderEnum | None = None
+    planned_start: datetime | None = None
+    planned_end: datetime | None = None
