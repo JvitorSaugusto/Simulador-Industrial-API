@@ -3,13 +3,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from schemas.machine_schema import MachineRequestSchema, MachineResponseSchema, MachineUpdateSchema
+from services.down_time_service import DownTimeService
 from services.machine_service import MachineService
 
 
 router = APIRouter()
 
 def get_machine_service(db: AsyncSession = Depends(get_db)) -> MachineService:
-    return MachineService(db)
+    downtime_service = DownTimeService (db)
+    return MachineService(db, downtime_service)
 
 @router.post("/", response_model=MachineResponseSchema, status_code=201)
 async def create_machine(payload: MachineRequestSchema, service: MachineService = Depends(get_machine_service)):
