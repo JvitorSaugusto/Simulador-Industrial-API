@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
 from database import Base
+from enums.factory_enums import MachineStatusEnum
 
 if TYPE_CHECKING:
     from .production_line_model import ProductionLineModel
@@ -21,4 +22,4 @@ class MachineModel(Base):
     last_start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_stop_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_maintenance_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    
+    status: Mapped[MachineStatusEnum] = mapped_column(SQLEnum(MachineStatusEnum), default=MachineStatusEnum.IDLE, nullable=False)
