@@ -1,7 +1,6 @@
 from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from enums.factory_enums import LineStatusEnum
 from errors.exceptions import NotFoundException
 from schemas.production_line_schema import ProductionLineRequestSchema, ProductionLineUpdateSchema
 from models.production_line_model import ProductionLineModel
@@ -21,12 +20,8 @@ class ProductionLineService:
         
         return new_production_line
     
-    async def list_all_production_line(self, status: LineStatusEnum | None = None) -> Sequence[ProductionLineModel]:
+    async def list_all_production_line(self) -> Sequence[ProductionLineModel]:
         query = select(ProductionLineModel)
-        
-        if status:
-            query = query.where(ProductionLineModel.status == status)
-        
         result = await self.db.execute(query)
         production_lines = result.scalars().all()
     

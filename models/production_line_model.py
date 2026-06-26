@@ -1,9 +1,8 @@
 from decimal import Decimal
-from sqlalchemy import String, Integer, Text, Numeric, Float, Enum as SQLEnum
+from sqlalchemy import String, Integer, Text, Numeric, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
-from enums.factory_enums import LineStatusEnum
-from models.machine_models import MachineModel
+from models.machine_model import MachineModel
 from models.production_order_model import ProductionOrderModel
 
 
@@ -18,6 +17,5 @@ class ProductionLineModel(Base):
     current_production_rate: Mapped [float]  = mapped_column(Float)
     production_rate: Mapped [float]  = mapped_column(Float)
     total_runtime_minutes: Mapped [int]  = mapped_column(Integer)
-    status: Mapped[LineStatusEnum] = mapped_column(SQLEnum(LineStatusEnum), default=LineStatusEnum.IDLE, nullable=False)
     machines: Mapped[MachineModel | None] = relationship(back_populates="production_line")
     production_orders: Mapped[ProductionOrderModel | None] = relationship(back_populates="production_line")
