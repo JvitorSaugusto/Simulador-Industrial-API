@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
 from models.production_line_model import ProductionLineModel
+from models.production_order_model import ProductionOrderModel
 
 
 class OeeRecordModel(Base):
@@ -13,8 +14,9 @@ class OeeRecordModel(Base):
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     production_order_id: Mapped[int] = mapped_column(ForeignKey("production_order.id", ondelete="CASCADE"))
+    production_order: Mapped[ProductionOrderModel] = relationship(back_populates="oees_records")  
     production_line_id: Mapped[int] = mapped_column(ForeignKey("production_line.id", ondelete="CASCADE"))
-    production_line: Mapped[ProductionLineModel] = relationship(back_populates="production_orders")
+    production_line: Mapped[ProductionLineModel] = relationship(back_populates="oees_records")
     availability: Mapped[Decimal] = mapped_column(Numeric(5, 2))
     perfomance: Mapped[Decimal] = mapped_column(Numeric(5, 2))
     quality: Mapped[Decimal] = mapped_column(Numeric(5, 2))
