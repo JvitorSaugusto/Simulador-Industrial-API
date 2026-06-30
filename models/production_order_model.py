@@ -5,6 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
 from enums.factory_enums import ProductionOrderEnum
+from models.oee_model import OeeRecordModel
 from models.production_line_model import ProductionLineModel
 
 
@@ -24,4 +25,5 @@ class ProductionOrderModel(Base):
     actual_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     actual_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     production_line_id: Mapped[int] = mapped_column(ForeignKey("production_line.id", ondelete="CASCADE"))
-    production_line: Mapped[ProductionLineModel] = relationship(back_populates="production_orders")
+    production_line: Mapped[ProductionLineModel] = relationship(back_populates="production_order")
+    oees_records: Mapped[OeeRecordModel] = relationship(back_populates="production_order") 
