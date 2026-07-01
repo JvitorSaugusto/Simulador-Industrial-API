@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from enums.factory_enums import ProductionOrderEnum
 from models.down_time_model import DownTimeEventModel
+from models.oee_model import OeeRecordModel
 from models.production_order_model import ProductionOrderModel
 from errors.exceptions import NotFoundException
 from errors.errors_domain.production_order_errors import ProductionOrderInvalidStatusException
@@ -42,7 +43,7 @@ class OeeRecordService:
     def get_oee(self, availability: float, perfomance: float, quality: float) -> float:
         return (availability * perfomance * quality) * 100
     
-    async def calculate_current_oee(self, line_id: int) -> float:
+    async def calculate_current_oee(self, line_id: int) -> OeeRecordModel:
         active_op = await self.get_active_op_by_line(line_id)
         
         if not active_op:
@@ -62,7 +63,7 @@ class OeeRecordService:
         runtime = total_runtime - current_stop_time
         
         # --- Disponibilidade ---
-        _cal_availability = self._calculate_availability(runtime, total_runtime)
+        _availability_score = self._calculate_availability(runtime, total_runtime)
         
         # --- Performance ---
         planned_production_quant = active_op.quantity_planned
@@ -70,20 +71,24 @@ class OeeRecordService:
         planned_production_time_minutes = time_planned_delta.total_seconds() / 60
         
         if planned_production_time_minutes <= 0 or runtime <= 0:
-            _cal_perfomance = 1.0
+            _performance_score = 1.0
         else:
             ideal_cycle = (planned_production_quant / planned_production_time_minutes)
             real_cycle = (active_op.quantity_produced / runtime)
-            _cal_perfomance = self._calculate_perfomance(ideal_cycle, real_cycle)
+            _performance_score = self._calculate_perfomance(ideal_cycle, real_cycle)
         
         # --- Qualidade ---
         current_correct_count = active_op.quantity_good
         current_total_count = active_op.quantity_produced
         
-        _cal_quality = self._calculate_quality(current_correct_count, current_total_count)
+        _quality_score = self._calculate_quality(current_correct_count, current_total_count)
         
         # --- OEE FINAL ---
-        oee = self.get_oee(_cal_availability, _cal_perfomance, _cal_quality)
+        oee_score = self.get_oee(_availability_score, _performance_score, _quality_score)
+        
+        oee_start_period = datetime.now(timezone.utc)
+        
+        oee = OeeRecordModel(production_order_id=active_op.id, production_line_id=line_id, availability=_availability_score, perfomance=_performance_score, quality=_quality_score, oee=oee_score, timestamp=oee_start_period)
         
         return oee
   
