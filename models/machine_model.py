@@ -17,9 +17,11 @@ class MachineModel(Base):
     code: Mapped[str] = mapped_column()
     base_failure_rate: Mapped[float] = mapped_column(default=3.0)
     wear_level: Mapped[float] = mapped_column(default=0.0)
+    breakdown_count: Mapped[int] = mapped_column(default=0) # futuramente teremos lógicas temporais de manutenção preventiva
     production_line_id: Mapped[int | None] = mapped_column(ForeignKey("production_lines.id", ondelete="CASCADE"))
     production_line: Mapped["ProductionLineModel | None"] = relationship(back_populates="machines")
     last_start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_stop_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    last_maintenance_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    maintenance_start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    maintenance_end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[MachineStatusEnum] = mapped_column(SQLEnum(MachineStatusEnum), default=MachineStatusEnum.IDLE, nullable=False)
