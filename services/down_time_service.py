@@ -1,11 +1,14 @@
 
 from datetime import datetime, timezone
+import random
 
+from pydantic_extra_types.pendulum_dt import Duration
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from enums.factory_enums import DownTimeEventTypeEnum
+from enums.factory_enums import DownTimeEventTypeEnum, DownTimeSeverityEnum
 from errors.exceptions import NotFoundException
 from models.down_time_model import DownTimeEventModel
+from models.machine_model import MachineModel
 from schemas.down_time_schema import DownTimeUpdateSchema
 
 
@@ -67,3 +70,23 @@ class DownTimeService:
             await self.db.commit()
             return True
         return False
+    
+    def generate_event(self, machine_id, op_id, type: DownTimeEventTypeEnum, severity: DownTimeSeverityEnum | None = None) -> DownTimeEventModel:
+        event_data = {
+        "machine_id": machine_id,
+        "production_order_id": op_id,
+        "type": type,
+        "reason": "Parada operacional genérica" # Um valor padrão caso mude o IF
+        }
+
+    # 2. Insere os campos específicos apenas nas condições certas
+        if type == DownTimeEventTypeEnum.FAILURE:
+            event_data["severity"] = severity
+            event_data["reason"] = "Favor preencher após manutenção"
+            event_data["start_time"] = datetime.now(timezone.utc)
+
+        event = DownTimeEventModel(**event_data)
+        
+        self.db.add(event)
+        
+        return event
