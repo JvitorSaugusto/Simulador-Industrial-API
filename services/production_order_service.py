@@ -2,11 +2,9 @@ from datetime import datetime, timezone
 from typing import Sequence
 import uuid
 
-from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import get_db
 from enums.factory_enums import ProductionOrderEnum
 from errors.errors_domain.production_order_errors import ProductionOrderInvalidStatusException
 from errors.exceptions import NotFoundException
@@ -15,7 +13,7 @@ from schemas.production_order_schema import ProductionOrderRequestSchema, Produc
 
 
 class ProductionOrderService:
-    def __init__(self, db: AsyncSession = Depends(get_db)):
+    def __init__(self, db: AsyncSession):
         self.db = db
         
     def _validate_op_status(self, op_data: ProductionOrderModel, current_status: str, new_status: str):
@@ -85,5 +83,15 @@ class ProductionOrderService:
             await self.db.commit()
             return True
         return False
+    
+    async def get_all_active_op_by_line(self, line_id) -> Sequence[ProductionOrderModel]:
+        query = select(ProductionOrderModel).where(ProductionOrderModel.production_line_id == line_id)
+        result = await self.db.execute(query)
         
+        return result.scalars().all()
+    
+    async def get_active_op_by_line(self, line_id) -> ProductionOrderModel | None:
+        query = select(ProductionOrderModel).where(ProductionOrderModel.production_line_id == line_id)
+        result = await self.db.execute(query)
         
+        return result.scalars().first()
