@@ -70,3 +70,10 @@ class MachineService:
             await self.db.commit()
             return True
         return False
+    
+    async def get_all_machines_by_line(self, line_id) -> Sequence[MachineModel]:
+        query = select(MachineModel).where(MachineModel.production_line_id == line_id)
+        result = await self.db.execute(query)
+        machines = result.scalars().all()
+        
+        return machines
