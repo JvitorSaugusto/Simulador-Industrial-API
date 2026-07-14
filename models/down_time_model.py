@@ -12,7 +12,7 @@ class DownTimeEventModel(Base):
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     machine_id: Mapped[int] = mapped_column(ForeignKey("machines.id", ondelete="CASCADE"))
-    production_order_id: Mapped[int] = mapped_column(ForeignKey("production_order.id", ondelete="CASCADE"))
+    production_order_id: Mapped[int] = mapped_column(ForeignKey("production_orders.id", ondelete="CASCADE"))
     reason: Mapped[str] = mapped_column(String(255), nullable=False)
     comment: Mapped[str | None] = mapped_column(Text)
     type: Mapped[DownTimeEventTypeEnum] = mapped_column(SQLEnum(DownTimeEventTypeEnum), nullable=False)
