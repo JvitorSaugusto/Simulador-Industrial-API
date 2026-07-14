@@ -2,10 +2,12 @@
 from datetime import datetime, timezone
 import random
 
+from certifi import where
 from pydantic_extra_types.pendulum_dt import Duration
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from enums.factory_enums import DownTimeEventTypeEnum, DownTimeSeverityEnum
+from enums.factory_enums import DownTimeEventStatusEnum, DownTimeEventTypeEnum, DownTimeSeverityEnum
 from errors.exceptions import NotFoundException
 from models.down_time_model import DownTimeEventModel
 from models.machine_model import MachineModel
@@ -76,10 +78,9 @@ class DownTimeService:
         "machine_id": machine_id,
         "production_order_id": op_id,
         "type": type,
-        "reason": "Parada operacional genérica" # Um valor padrão caso mude o IF
+        "reason": "Parada operacional genérica"
         }
 
-    # 2. Insere os campos específicos apenas nas condições certas
         if type == DownTimeEventTypeEnum.FAILURE:
             event_data["severity"] = severity
             event_data["reason"] = "Favor preencher após manutenção"
@@ -90,3 +91,32 @@ class DownTimeService:
         self.db.add(event)
         
         return event
+    
+    async def update_active_event_severity(self, machine_id, severity: DownTimeSeverityEnum) -> DownTimeEventModel:
+        query = select(DownTimeEventModel).where(DownTimeEventModel.machine_id == machine_id and DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN)
+        result = await self.db.execute(query)
+        event = result.scalars().first()
+        
+        if not event:
+            raise NotFoundException("evento")
+        
+        event.severity = severity
+        
+        await self.db.commit()
+        await self.db.refresh(event)
+        
+        return event
+        
+    async def close_active_event(self, machine_id):
+        query = select(DownTimeEventModel).where(DownTimeEventModel.machine_id == machine_id and DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN)
+        result = await self.db.execute(query)
+        event = result.scalars().first()
+        
+        if not event:
+            raise NotFoundException("evento")
+        
+        event.status = DownTimeEventStatusEnum.CLOSE
+        
+        await self.db.commit()
+        await self.db.refresh(event)
+        
