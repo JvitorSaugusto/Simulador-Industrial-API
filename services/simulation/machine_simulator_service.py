@@ -9,7 +9,6 @@ from errors.exceptions import NotFoundException
 from models.machine_model import MachineModel
 from typed_dicts.machine_start_result import MachineStartResult
 
-from models.machine_model import MachineModel
 import random
 
 from services.down_time_service import DownTimeService
