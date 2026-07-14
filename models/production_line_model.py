@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import List
 from sqlalchemy import String, Integer, Text, Numeric, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
@@ -17,5 +18,5 @@ class ProductionLineModel(Base):
     current_production_rate: Mapped [float]  = mapped_column(Float)
     production_rate: Mapped [float]  = mapped_column(Float)
     total_runtime_minutes: Mapped [int]  = mapped_column(Integer)
-    machines: Mapped[MachineModel | None] = relationship(back_populates="production_line")
-    production_orders: Mapped[ProductionOrderModel | None] = relationship(back_populates="production_line")
+    machines: Mapped[List[MachineModel | None]] = relationship(back_populates="production_line")
+    production_orders: Mapped[List[ProductionOrderModel | None]] = relationship(back_populates="production_line")

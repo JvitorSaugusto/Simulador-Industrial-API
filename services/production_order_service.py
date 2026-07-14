@@ -15,16 +15,16 @@ from schemas.production_order_schema import ProductionOrderRequestSchema, Produc
 
 
 class ProductionOrderService:
-    def __init__(self, db: AsyncSession = Depends(get_db)):
+    def __init__(self, db: AsyncSession):
         self.db = db
         
     def _validate_op_status(self, op_data: ProductionOrderModel, current_status: str, new_status: str):
         if current_status == ProductionOrderEnum.PENDING and new_status == ProductionOrderEnum.FINISHED:
                 raise ProductionOrderInvalidStatusException(f"O status finalizado não pode ser atribuido a uma Ordem de Produção pendente - OP {op_data.code}")
             
-        if current_status == ProductionOrderEnum.PRODUCTION:
+        if new_status == ProductionOrderEnum.PRODUCTION:
             op_data.actual_start = datetime.now(timezone.utc)
-        elif current_status == ProductionOrderEnum.FINISHED:
+        elif new_status == ProductionOrderEnum.FINISHED:
             op_data.actual_end = datetime.now(timezone.utc)
             
         return op_data
@@ -63,13 +63,15 @@ class ProductionOrderService:
         
         current_status = op_data.status
         
-        for key, value in updated_data:
+        new_status = updated_data.get("status", current_status)
+        
+        for key, value in updated_data.items():
             if key == "status":
                 new_status = value
 
         op_data = self._validate_op_status(op_data=op_data, current_status=current_status, new_status=new_status)
             
-        for key, value in updated_data:
+        for key, value in updated_data.items():
             setattr(op_data, key, value)
         
         await self.db.commit()
