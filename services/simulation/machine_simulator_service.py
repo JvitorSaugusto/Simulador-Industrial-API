@@ -1,5 +1,3 @@
-
-
 from enums.factory_enums import DownTimeEventTypeEnum, DownTimeSeverityEnum, MachineStatusEnum
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import select
@@ -7,17 +5,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors.exceptions import NotFoundException
 from models.machine_model import MachineModel
+from services.machine_service import MachineService
 from typed_dicts.machine_start_result import MachineStartResult
 
 import random
 
 from services.down_time_service import DownTimeService
+from schemas.machine_schema import MachineRequestSchema
+
+
+MOCK_MACHINE_NAMES = [
+        "Injetora de Plástico Hidráulica IP-01",
+        "Torno CNC de Alta Precisão TC-03",
+        "Prensa Estampadora Pneumática PE-02",
+        "Robô de Solda Braço Articulado RS-05",
+        "Esteira Transportadora Integrada ET-10",
+        "Fresadora Universal Digital FU-01",
+        "Furadeira de Bancada Industrial FB-04",
+        "Célula de Paletização Automatizada CP-08",
+        "Bobinadora de Fios de Cobre BC-02",
+        "Forno de Tratamento Térmico FT-01"
+    ]
 
 class MachineSimulator:
-    def __init__(self, db: AsyncSession, eventService: DownTimeService):
+    def __init__(self, db: AsyncSession, event_service: DownTimeService, machine_service: MachineService):
         self.db = db
-        self.eventService = eventService
-        
+        self.event_service = event_service
+        self.machine_service = machine_service
+    
     def _add_wear_per_cycle(self, machine: MachineModel):
         increment_wear = random.uniform(0.5, 1.5)
         machine.wear_level += increment_wear
@@ -44,7 +59,7 @@ class MachineSimulator:
         
         return future_date
     
-    async def _start_machines(self, line_id) -> MachineStartResult:
+    async def start_machines(self, line_id) -> MachineStartResult:
         query = select(MachineModel).where(MachineModel.production_line_id == line_id, MachineModel.status == MachineStatusEnum.IDLE)
         result = await self.db.execute(query)
         machines = result.scalars().all()
@@ -85,7 +100,7 @@ class MachineSimulator:
                     machine.maintenance_start_at = self._calculate_future_date_random()
                     machine.breakdown_count += 1 # futuramente teremos lógicas temporais de manutenção preventiva
                     
-                    self.eventService.generate_event(machine.id, op_id, DownTimeEventTypeEnum.FAILURE)
+                    self.event_service.generate_event(machine.id, op_id, DownTimeEventTypeEnum.FAILURE)
                     
                     machine.status = MachineStatusEnum.STOP
             
@@ -96,7 +111,7 @@ class MachineSimulator:
                     machine.status = MachineStatusEnum.MAINTENANCE
                     
                     severity = random.choice(list(DownTimeSeverityEnum))
-                    await self.eventService.update_active_event_severity(machine.id, severity)
+                    await self.event_service.update_active_event_severity(machine.id, severity)
                     machine.maintenance_end_at = self._future_date_by_severity(severity, machine.maintenance_end_at)
                     
             elif machine.status == MachineStatusEnum.MAINTENANCE:
@@ -107,6 +122,38 @@ class MachineSimulator:
                     
                     machine.maintenance_start_at = None
                     machine.maintenance_end_at = None
-                    await self.eventService.close_active_event(machine.id)
+                    await self.event_service.close_active_event(machine.id)
                     
+    
+    async def generate_machine_mock(self, line_id, quantity_machines):
+        query = select(MachineModel.name)
+        result = await self.db.execute(query)
+        existing_names = set(result.scalars().all())
         
+        available_names = []
+        
+        for name in MOCK_MACHINE_NAMES:
+            if name not in existing_names:
+                available_names.append(name)
+                
+        if not available_names:
+            raise ValueError("Todas as maquinas possiveis ja foram criadas")
+                
+        num_to_create = min(quantity_machines, len(MOCK_MACHINE_NAMES))
+        selected_names = random.sample(MOCK_MACHINE_NAMES, num_to_create)
+        
+        created_machines = []
+        
+        for machine_name in selected_names:
+            payload = MachineRequestSchema(
+                name=machine_name,
+                base_failure_rate=round(random.uniform(1.5, 4.5), 2)
+            )   
+        
+        new_machine = await self.machine_service.create_machine(payload)
+        new_machine.production_line_id = line_id
+        
+        created_machines.append(new_machine)
+        await self.db.commit()
+        
+        return created_machines
