@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +19,7 @@ def get_machine_service(db: AsyncSession = Depends(get_db)) -> MachineService:
 async def create_machine(payload: MachineRequestSchema, service: MachineService = Depends(get_machine_service)):
     return await service.create_machine(payload=payload)
 
-@router.get("/", response_model=MachineResponseSchema, status_code=200)
+@router.get("/", response_model=Sequence[MachineResponseSchema], status_code=200)
 async def list_machines(service: MachineService = Depends(get_machine_service)):
     return await service.list_machines()
 
