@@ -84,24 +84,30 @@ class MachineSimulator:
                  
                 if random.random() < failure_rate:
                     machine.maintenance_start_at = self._calculate_future_date_random()
-                    
-                    machine.status = MachineStatusEnum.STOP
                     machine.breakdown_count += 1 # futuramente teremos lógicas temporais de manutenção preventiva
                     
-                    down_time_event = self.eventService.generate_event(machine.id, op_id, DownTimeEventTypeEnum.FAILURE)
+                    self.eventService.generate_event(machine.id, op_id, DownTimeEventTypeEnum.FAILURE)
+                    
+                    machine.status = MachineStatusEnum.STOP
             
             elif machine.status == MachineStatusEnum.STOP:
-                if machine.maintenance_start_at <= datetime.now(timezone.utc):
-                    maintenance_end_at =  self._calculate_future_date_random()
+                if machine.maintenance_start_at and machine.maintenance_start_at <= datetime.now(timezone.utc):
+                    machine.maintenance_end_at =  self._calculate_future_date_random()
+                    
                     machine.status = MachineStatusEnum.MAINTENANCE
                     
+                    severity = random.choice(list(DownTimeSeverityEnum))
+                    await self.eventService.update_active_event_severity(machine.id, severity)
+                    machine.maintenance_end_at = self._future_date_by_severity(severity, machine.maintenance_end_at)
+                    
             elif machine.status == MachineStatusEnum.MAINTENANCE:
-                severity = down_time_event.severity = random.choice(list(DownTimeSeverityEnum))
-                
-                maintenance_end_at = self._future_date_by_severity(severity, maintenance_end_at)
-
-                if maintenance_end_at <= datetime.now(timezone.utc):
+                if machine.maintenance_end_at and machine.maintenance_end_at <= datetime.now(timezone.utc):
                     # Depois gerar um relatorio aqui sobre o fim da manutencao
                     machine.wear_level = 0.0
                     machine.status = MachineStatusEnum.PRODUCTION
+                    
+                    machine.maintenance_start_at = None
+                    machine.maintenance_end_at = None
+                    await self.eventService.close_active_event(machine.id)
+                    
         
