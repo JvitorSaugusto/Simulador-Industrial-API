@@ -56,7 +56,7 @@ class DownTimeService:
         if not event_data:
             raise NotFoundException("Evento")
         
-        for key, value in update_data:
+        for key, value in update_data.items():
             setattr(event_data, key, value)
             
         await self.db.commit()

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-
+from decimal import Decimal
 from sqlalchemy import func, select
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -86,9 +86,22 @@ class OeeRecordService:
         # --- OEE FINAL ---
         oee_score = self.get_oee(_availability_score, _performance_score, _quality_score)
         
+        db_availability = Decimal(str(round(_availability_score * 100, 2)))
+        db_performance = Decimal(str(round(_performance_score * 100, 2)))
+        db_quality = Decimal(str(round(_quality_score * 100, 2)))
+        db_oee = Decimal(str(round(oee_score, 2)))
+        
         oee_start_period = datetime.now(timezone.utc)
         
-        oee = OeeRecordModel(production_order_id=active_op.id, production_line_id=line_id, availability=_availability_score, perfomance=_performance_score, quality=_quality_score, oee=oee_score, timestamp=oee_start_period)
+        oee = OeeRecordModel(
+            production_order_id=active_op.id, 
+            production_line_id=line_id, 
+            availability=db_availability, 
+            performance=db_performance, 
+            quality=db_quality, 
+            oee=db_oee, 
+            timestamp=oee_start_period
+        )
         
         return oee
   

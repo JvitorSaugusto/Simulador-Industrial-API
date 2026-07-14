@@ -49,7 +49,7 @@ class MachineService:
 
         updated_data = payload.model_dump(exclude_unset=True)
 
-        for key, value in updated_data:
+        for key, value in updated_data.items():
             setattr(machine_data, key, value)
             
         if machine_data.status == MachineStatusEnum.STOP:

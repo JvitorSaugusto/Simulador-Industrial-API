@@ -10,6 +10,7 @@ class ProductionOrderRequestSchema(BaseModel):
     quantity_planned: int
     planned_start: datetime
     planned_end: datetime
+    production_line_id: int
     
 
 class ProductionOrderResponseSchema(BaseModel):
