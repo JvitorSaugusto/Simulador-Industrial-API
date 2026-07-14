@@ -28,3 +28,5 @@ Desktop.ini
 
 # Variáveis de Ambiente (Segurança)
 .env
+
+.history

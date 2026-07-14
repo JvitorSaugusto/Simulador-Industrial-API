@@ -39,7 +39,7 @@ class ProductionLineService:
         line_data = await self.db.get(ProductionLineModel, line_id)
         
         if not line_data:
-            raise NotFoundException("Linha de Produção")
+            raise NotFoundException("Linha de Produção não")
         
         update_data = payload.model_dump(exclude_unset=True)
         

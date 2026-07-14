@@ -138,15 +138,11 @@ Esses registros representam snapshots da execução da fábrica e serão utiliza
 
 ---
 
-# 📊 Cálculo do OEE
-
-Durante toda a execução da Ordem de Produção o sistema calcula automaticamente os três pilares do OEE:
-
-* Availability
-* Performance
-* Quality
-
-A partir desses indicadores é obtido o OEE global da produção.
+## 📊 O Motor de OEE (Tempo Real)
+O sistema calcula o OEE da fábrica de forma dinâmica a cada minuto via Celery, dividindo a métrica em três pilares decimais normalizados antes da consolidação:
+- **Disponibilidade:** Tempo de produção ativo vs. Tempo de relógio corrido da OP.
+- **Performance:** Ritmo real de produção (peças/min) vs. Ciclo ideal planejado.
+- **Qualidade:** Índice de peças boas vs. Total de peças produzidas.
 
 ---
 

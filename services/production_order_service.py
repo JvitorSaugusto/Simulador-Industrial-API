@@ -20,7 +20,7 @@ class ProductionOrderService:
         
     def _validate_op_status(self, op_data: ProductionOrderModel, current_status: str, new_status: str):
         if current_status == ProductionOrderEnum.PENDING and new_status == ProductionOrderEnum.FINISHED:
-                raise ProductionOrderInvalidStatusException(op_data.code)
+                raise ProductionOrderInvalidStatusException(f"O status finalizado não pode ser atribuido a uma Ordem de Produção pendente - OP {op_data.code}")
             
         if new_status == ProductionOrderEnum.PRODUCTION:
             op_data.actual_start = datetime.now(timezone.utc)
