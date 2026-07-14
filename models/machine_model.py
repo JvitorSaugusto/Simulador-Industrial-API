@@ -22,6 +22,6 @@ class MachineModel(Base):
     production_line: Mapped["ProductionLineModel | None"] = relationship(back_populates="machines")
     last_start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_stop_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    maintenance_start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
-    maintenance_end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    maintenance_start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    maintenance_end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[MachineStatusEnum] = mapped_column(SQLEnum(MachineStatusEnum), default=MachineStatusEnum.IDLE, nullable=False)
