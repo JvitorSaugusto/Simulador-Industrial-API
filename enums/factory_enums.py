@@ -25,6 +25,10 @@ class DownTimeSeverityEnum(str, Enum):
     MEDIUM = "mid"
     HIGH = "high"
     
+class DownTimeEventStatusEnum(str, Enum):
+    OPEN = "open"
+    CLOSE = "close"
+    
 class LineStatusEnum(str, Enum):
     IDLE = "idle"
     RUNNING = "running"

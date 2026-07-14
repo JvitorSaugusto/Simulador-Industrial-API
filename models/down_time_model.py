@@ -4,7 +4,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Enum as SQLE
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
-from enums.factory_enums import DownTimeEventTypeEnum, DownTimeSeverityEnum
+from enums.factory_enums import DownTimeEventTypeEnum, DownTimeSeverityEnum, DownTimeEventStatusEnum
 
 
 class DownTimeEventModel(Base):
@@ -19,4 +19,5 @@ class DownTimeEventModel(Base):
     severity: Mapped[DownTimeSeverityEnum | None] = mapped_column(SQLEnum(DownTimeSeverityEnum), nullable=True)
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     end_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[DownTimeEventStatusEnum] = mapped_column(SQLEnum(DownTimeEventStatusEnum), default=DownTimeEventStatusEnum.OPEN)
     duration: Mapped[float] = mapped_column()
