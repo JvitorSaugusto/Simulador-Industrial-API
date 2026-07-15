@@ -29,20 +29,17 @@ class SimulationOrchestrator:
         
         
     async def start_simulation_line(self, line_id, auto_generate: bool):
-        # liga as maquinas
-        # gera ou nao ops
-        # inicia a linha - chama os outros simulators services
+               
+        await self.line_simulator.start_line(line_id)
         
-        await self.machine_simulator.start_machines(line_id)
+        await self.machine_simulator.start_all_machines(line_id)
         
         active_op = self.op_service.get_active_op_by_line(line_id=line_id)
         
         if not active_op:
             if auto_generate:
                 await self.op_simulator.generate_op_mock(line_id)
-        else:
-            # jogar erro que precisa de uma op
-            pass
+
             
     async def process_factory_tick(self):
         """
@@ -59,29 +56,19 @@ class SimulationOrchestrator:
 
         for line in running_lines:
             active_op = await self.op_service.get_active_op_by_line(line.id)
+            op_id = active_op.id if active_op else None
 
-            if not active_op:
-                line.simulation_status = LineStatusEnum.IDLE
-                continue
+            await self.machine_simulator.process_machine_states(line_id=line.id, op_id=op_id,)
+            
+            cycle_pieces = await self.line_simulator.process_line_production(line)
 
-            await self.machine_simulator.process_machine_states(line_id=line.id,op_id=active_op.id,)
-
-            await self.op_simulator.process_op_state(line_id=line, op_id=active_op,)
-
-
-            # Eventos (futuramente)
-            # await self.event_simulator.process(...)
-
-            # OEE (futuramente)
-            # await self.oee_simulator.generate_snapshot(...)
-
-            # Verificar término da OP
-            # if active_op.current_count >= active_op.planned_quantity:
-            #
-            #     active_op.status = FINISHED
-            #     line.status = LineStatusEnum.IDLE
-            #
-            #     await self.machine_simulator.stop_all(line.id)
-
+            if active_op and cycle_pieces > 0:              
+                finished_op = await self.op_simulator.process_op_state(line_id=line, op_id=op_id, cycle_pieces=cycle_pieces)
+                
+                if finished_op:
+                    await self.machine_simulator.idle_all_machines(line.id)
+            
+            # abrir um evento pra registrar produção sem OP
+         
         await self.db.commit()
                 
