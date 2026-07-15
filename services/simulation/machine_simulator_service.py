@@ -10,8 +10,8 @@ from typed_dicts.machine_start_result import MachineStartResult
 
 import random
 
-from services.down_time_service import DownTimeService
 from schemas.machine_schema import MachineRequestSchema
+from services.simulation.down_time_event_simulator_service import DownTimeEventSimulator
 
 
 MOCK_MACHINE_NAMES = [
@@ -28,9 +28,9 @@ MOCK_MACHINE_NAMES = [
     ]
 
 class MachineSimulator:
-    def __init__(self, db: AsyncSession, event_service: DownTimeService, machine_service: MachineService):
+    def __init__(self, db: AsyncSession, down_event_simulator: DownTimeEventSimulator, machine_service: MachineService):
         self.db = db
-        self.event_service = event_service
+        self.down_event_simulator = down_event_simulator
         self.machine_service = machine_service
     
     def _add_wear_per_cycle(self, machine: MachineModel):
@@ -59,7 +59,7 @@ class MachineSimulator:
         
         return future_date
     
-    async def start_machines(self, line_id) -> MachineStartResult:
+    async def start_all_machines(self, line_id) -> MachineStartResult:
         query = select(MachineModel).where(MachineModel.production_line_id == line_id, MachineModel.status == MachineStatusEnum.IDLE)
         result = await self.db.execute(query)
         machines = result.scalars().all()
@@ -85,6 +85,13 @@ class MachineSimulator:
             'message': f'{success_start_machine} máquinas ligadas com sucesso!'
         }
         
+    async def idle_all_machines(self, line_id):
+        query = select(MachineModel).where(MachineModel.production_line_id == line_id)
+        result = await self.db.execute(query)
+        machines = result.scalars().all()
+        
+        for machine in machines:
+            machine.status = MachineStatusEnum.IDLE
 
     async def process_machine_states(self, line_id, op_id):
         query = select(MachineModel).where(MachineModel.production_line_id == line_id)
@@ -100,7 +107,7 @@ class MachineSimulator:
                     machine.maintenance_start_at = self._calculate_future_date_random()
                     machine.breakdown_count += 1 # futuramente teremos lógicas temporais de manutenção preventiva
                     
-                    self.event_service.generate_event(machine.id, op_id, DownTimeEventTypeEnum.FAILURE)
+                    await self.down_event_simulator.generate_event(line_id, op_id, DownTimeEventTypeEnum.FAILURE)
                     
                     machine.status = MachineStatusEnum.STOP
             
@@ -111,7 +118,7 @@ class MachineSimulator:
                     machine.status = MachineStatusEnum.MAINTENANCE
                     
                     severity = random.choice(list(DownTimeSeverityEnum))
-                    await self.event_service.update_active_event_severity(machine.id, severity)
+                    await self.down_event_simulator.update_active_event_severity(machine.id, severity)
                     machine.maintenance_end_at = self._future_date_by_severity(severity, machine.maintenance_end_at)
                     
             elif machine.status == MachineStatusEnum.MAINTENANCE:
@@ -122,7 +129,7 @@ class MachineSimulator:
                     
                     machine.maintenance_start_at = None
                     machine.maintenance_end_at = None
-                    await self.event_service.close_active_event(machine.id)
+                    await self.down_event_simulator.close_active_event(line_id)
                     
     
     async def generate_machine_mock(self, line_id, quantity_machines):
@@ -149,11 +156,10 @@ class MachineSimulator:
                 name=machine_name,
                 base_failure_rate=round(random.uniform(1.5, 4.5), 2)
             )   
-        
-        new_machine = await self.machine_service.create_machine(payload)
-        new_machine.production_line_id = line_id
-        
-        created_machines.append(new_machine)
+            
+            new_machine = await self.machine_service.create_machine(payload)
+            new_machine.production_line_id = line_id
+            
+            created_machines.append(new_machine)
         await self.db.commit()
-        
         return created_machines
