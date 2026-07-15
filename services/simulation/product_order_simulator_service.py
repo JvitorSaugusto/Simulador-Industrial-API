@@ -58,14 +58,13 @@ class ProductionOrderSimulator:
         self.machineService = machineService
         self.op_service = op_service
         
-    def _produce_pieces(self, op: ProductionOrderModel):
-            pieces_per_cycle = random.randint(3, 8)
-            op.quantity_produced += pieces_per_cycle
-            op.quantity_bad = random.randint(0, pieces_per_cycle)
+    def _analyze_pieces(self, op: ProductionOrderModel, cycle_pieces):
+            op.quantity_produced += cycle_pieces
+            op.quantity_bad = random.randint(0, cycle_pieces)
             op.quantity_good = op.quantity_produced - op.quantity_bad               
       
                 
-    async def process_op_state(self, op_id, line_id):
+    async def process_op_state(self, op_id, line_id, cycle_pieces) -> bool:
         op = await self.db.get(ProductionOrderModel, op_id)
         if not op:
             raise NotFoundException("Ordem de Produção")
@@ -77,13 +76,15 @@ class ProductionOrderSimulator:
             op.status = ProductionOrderEnum.PRODUCTION
         else:
             op.status = ProductionOrderEnum.STOP
-            return
+            return False
             
-        self._produce_pieces(op)
+        self._analyze_pieces(op, cycle_pieces)
             
         if op.quantity_produced >= op.quantity_planned:
-            op.status = ProductionOrderEnum.FINISHED
-            return
+            op.status = ProductionOrderEnum.FINISHED 
+            return True
+        
+        return False
         
     async def generate_op_mock(self, line_id):
         order_template = random.choice(MOCK_PRODUCTION_ORDERS)

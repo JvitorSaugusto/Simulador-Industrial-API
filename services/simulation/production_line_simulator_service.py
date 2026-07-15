@@ -1,12 +1,15 @@
 import random
+from typing import List
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.production_order_model import ProductionOrderModel
+from enums.factory_enums import LineStatusEnum, MachineStatusEnum
 from schemas.production_line_schema import ProductionLineRequestSchema
+from services.machine_service import MachineService
 from services.production_line_service import ProductionLineService
 from models.production_line_model import ProductionLineModel
+from errors.exceptions import NotFoundException
 
 MOCK_PRODUCTION_LINES = [
     # --- Setor de Metalmecânica & Motores (Ciclos mais lentos, peças complexas) ---
@@ -52,9 +55,10 @@ MOCK_PRODUCTION_LINES = [
 
 
 class LineSimulator:
-    def __init__(self, db: AsyncSession, line_service: ProductionLineService):
+    def __init__(self, db: AsyncSession, line_service: ProductionLineService, machine_service: MachineService):
         self.db = db
         self.line_service = line_service
+        self.machine_service = machine_service
 
     async def generate_line_mock(self, quantity_lines: int = 3):
         query = select(ProductionLineModel.name)
@@ -69,8 +73,6 @@ class LineSimulator:
 
         if not available_lines:
             raise ValueError("Todas as linhas possiveis ja foram criadas")
-        
-        # nesse fluxo atual n vou poder usa o for das linhas la no simulator service
         
         num_lines_to_create = min(quantity_lines, len(available_lines))
         
@@ -90,3 +92,23 @@ class LineSimulator:
             created_lines.append(line)
 
         return created_lines
+    
+    async def start_line(self, line_id):
+        line = await self.db.get(ProductionLineModel, line_id)
+        
+        if not line:
+            raise NotFoundException("Linha de Produção")
+        
+        line.simulation_status = LineStatusEnum.RUNNING
+        
+    
+    async def process_line_production(self, line: ProductionLineModel):
+        machines = await self.machine_service.get_all_machines_by_line(line.id)
+        machines_list = list(machines)
+        
+        if all(m.status == MachineStatusEnum.PRODUCTION for m in machines_list):
+            pieces_per_cycle = random.randint(3, 8)
+            line.total_produced += pieces_per_cycle
+            return pieces_per_cycle
+        return 0
+        
