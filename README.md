@@ -18,7 +18,7 @@ O objetivo é criar uma arquitetura próxima à encontrada em sistemas industria
 
 # 🏭 O que a API Simula
 
-A fábrica virtual é composta por diversos elementos que interagem continuamente.
+A fábrica virtual é composta por diversos elements que interagem continuamente.
 
 Durante a simulação o sistema é capaz de representar:
 
@@ -28,7 +28,7 @@ Durante a simulação o sistema é capaz de representar:
 * Operadores
 * Manutenções Preventivas e Corretivas
 * Falhas Aleatórias
-* Eventos de Downtime
+* Eventos de Downtime (Quebras e Ociosidades)
 * Apontamentos de Produção
 * Indicadores OEE
 * Relatórios Gerenciais
@@ -48,6 +48,8 @@ As tarefas assíncronas simulam continuamente o funcionamento da fábrica, sendo
 * Atualizar tempos de operação;
 * Executar manutenções;
 * Criar apontamentos de produção;
+* Simular a ociosidade operacional (tempo de linha ligada sem Ordens de Produção ativas);
+* Simular o fator humano (probabilidade do operador esquecer de desligar o painel/máquinas ao término de uma OP, gerando desgaste fantasma);
 * Calcular automaticamente indicadores de OEE;
 * Atualizar métricas utilizadas pelos dashboards.
 
@@ -90,37 +92,22 @@ Caso qualquer máquina apresente uma falha crítica, toda a linha de produção 
 
 ---
 
-## Production Order (OP)
+## Production Order (OP) & Ociosidade
 
-Cada Ordem de Produção representa uma missão temporária de fabricação.
+Cada Ordem de Produção representa uma missão temporária de fabricação com metas específicas. Porém, a API suporta o funcionamento de uma fábrica real, distinguindo **tempo produtivo** de **tempo ocioso**:
 
-Ela contém informações como:
-
-* Produto
-* Quantidade planejada
-* Quantidade produzida
-* Quantidade aprovada
-* Quantidade rejeitada
-* Linha responsável pela execução
-
-Quando a quantidade planejada é atingida, a OP é finalizada automaticamente e a linha retorna ao estado **Idle**.
+* **Produção Ativa (Com OP):** O simulador monitora o progresso, desvia peças para análise de qualidade (aprovadas vs. rejeitadas) e calcula o OEE focado naquele lote. Quando a quantidade planejada é atingida, a OP é finalizada automaticamente.
+* **Ociosidade Operacional (Sem OP):** O motor de simulação permite que a linha continue rodando mesmo sem uma OP ativa. Nesse cenário, o sistema registra automaticamente eventos de **Downtime por Ociosidade (Idle)** para fins de análise de eficiência e desperdício de energia.
+* **Simulação de Falha Humana:** Ao término de uma OP, o sistema roda um cálculo probabilístico de erro humano. Há uma chance de o operador esquecer de desligar o painel, fazendo com que as máquinas continuem ligadas no status `PRODUCTION`, gerando desgaste físico desnecessário ("desgaste fantasma") e penalizando o OEE da linha até que a falha seja corrigida.
 
 ---
 
-## Simulação da Produção
+## Fluxo e Desacoplamento da Produção
 
-Durante a execução de uma OP, o simulador reproduz a passagem de peças pela linha de produção.
+A simulação física e o software de gestão da produção são completamente desacoplados no sistema:
 
-A cada ciclo de simulação o sistema pode:
-
-* Produzir novas peças;
-* Classificar peças como aprovadas ou rejeitadas;
-* Variar a velocidade de produção;
-* Atualizar o desgaste das máquinas;
-* Verificar ocorrência de falhas;
-* Atualizar indicadores da OP.
-
-Esses eventos são executados continuamente enquanto existir uma Ordem de Produção ativa.
+1. **A Linha Produz:** A cada tick físico da simulação, se todas as máquinas da célula estiverem ativas, a linha gera um volume bruto de peças físicas (independente de ter uma OP ou não) e incrementa seu totalizador de produção acumulada.
+2. **A OP Inspeciona:** Caso exista uma OP ativa, os dados físicos de produção do ciclo são transmitidos via passagem de eventos para o simulador de OP, que assume o papel do controle de qualidade, realizando a análise de refugo (separando as peças em aprovadas ou rejeitadas) de forma isolada na memória.
 
 ---
 
@@ -204,12 +191,12 @@ Entre as práticas adotadas destacam-se:
 * CRUD de Ordens de Produção
 * CRUD de Manutenções
 * Registro de Falhas
-* Registro de Downtime
-* Simulação de Produção
-* Simulação de Desgaste
-* Simulação de Falhas
-* Geração de Apontamentos
-* Cálculo Automático de OEE
+* Registro de Downtime (Falhas e Ociosidades por linha)
+* Simulação de Produção Desacoplada (Física vs. Qualidade)
+* Simulação de Desgaste Realista
+* Simulação de Falhas e Comportamento de Operadores (Fator Humano)
+* Geração de Apontamentos (Snapshots)
+* Cálculo Automático de OEE em Tempo Real
 * Dashboard Industrial
 * Relatórios Gerenciais
 * API REST Documentada
@@ -233,3 +220,8 @@ Este projeto tem como objetivo aprofundar conhecimentos em:
 * APIs REST de Alta Performance
 * Boas Práticas de Desenvolvimento Backend
 
+---
+
+# 🔮 Próximos Passos & Roadmap
+
+* [ ] **Ambiente OpenAI Gymnasium (IA):** Envelopar o simulador industrial dentro da biblioteca Gymnasium para transformar o comportamento das linhas de produção em um ambiente de Aprendizado por Reforço (Reinforcement Learning). O objetivo final é treinar um agente de Inteligência Artificial para atuar como o "Gestor de Chão de Fábrica", aprendendo o momento ótimo de agendar manutenções preventivas com base no desgaste das máquinas para maximizar o OEE total.
