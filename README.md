@@ -1,4 +1,4 @@
-# 🏭 Industria Digital Twin API
+# 🏭 Industrial Digital Twin API
 
 Uma API assíncrona de alta performance desenvolvida em **Python** para simulação de ambientes industriais, gerenciamento de linhas de produção, monitoramento de máquinas e cálculo automatizado de indicadores de eficiência (**OEE - Overall Equipment Effectiveness**).
 
@@ -18,14 +18,14 @@ O objetivo é criar uma arquitetura próxima à encontrada em sistemas industria
 
 # 🏭 O que a API Simula
 
-A fábrica virtual é composta por diversos elements que interagem continuamente.
+A fábrica virtual é composta por diversos elementos que interagem continuamente.
 
 Durante a simulação o sistema é capaz de representar:
 
 * Linhas de Produção
 * Máquinas Industriais
 * Ordens de Produção (Production Orders)
-* Operadores
+* Operadores (Fase Futura)
 * Manutenções Preventivas e Corretivas
 * Falhas Aleatórias
 * Eventos de Downtime (Quebras e Ociosidades)
@@ -73,7 +73,7 @@ A linha mantém informações relacionadas ao seu estado atual, como:
 * Tempo atual de operação
 * Tempo total de operação
 
-Seu status é calculado dinamicamente a partir das máquinas que a compõem e da existência de uma Ordem de Produção ativa.
+Seu status é calculated dinamicamente a partir das máquinas que a compõem e da existência de uma Ordem de Produção ativa.
 
 ---
 
@@ -222,6 +222,23 @@ Este projeto tem como objetivo aprofundar conhecimentos em:
 
 ---
 
-# 🔮 Próximos Passos & Roadmap
+# 🔮 Próximos Passos & Roadmap de Desenvolvimento
 
-* [ ] **Ambiente OpenAI Gymnasium (IA):** Envelopar o simulador industrial dentro da biblioteca Gymnasium para transformar o comportamento das linhas de produção em um ambiente de Aprendizado por Reforço (Reinforcement Learning). O objetivo final é treinar um agente de Inteligência Artificial para atuar como o "Gestor de Chão de Fábrica", aprendendo o momento ótimo de agendar manutenções preventivas com base no desgaste das máquinas para maximizar o OEE total.
+O desenvolvimento do Gêmeo Digital está estruturado em marcos de evolução incremental para garantir robustez arquitetural em cada nova mecânica introduzida:
+
+### 📅 Fase 1: Escala Temporal & Relógio de Fábrica (Time Dilation)
+* [ ] **Time Dilation Engine:** Implementar um relógio interno virtual onde **1 dia completo de produção simulada equivale a exatamente 30 minutos em tempo real**.
+* [ ] **Sincronização do Celery:** Adaptar os ticks físicos e analíticos para responderem a essa nova escala de tempo acelerada, permitindo simular semanas de operação industrial em poucas horas de execução física.
+
+### 📅 Fase 2: Painel de Controle Haptic & Interatividade Avançada
+* [ ] **Controles de Simulação (Hot-Swapping):** Permitir pausar, retomar e acelerar/desacelerar o fluxo do tempo da fábrica via chamadas de API.
+* [ ] **Ajustes Finos em Tempo Real:** Permitir que o usuário adicione novas máquinas a uma linha ativa, altere parâmetros de velocidade nominal das máquinas e recalibre taxas de falha em pleno funcionamento.
+
+### 📅 Fase 3: Escalas de Trabalho & Alocação de Operadores
+* [ ] **Turnos de Trabalho:** Implementação de perfis de operadores trabalhando em turnos dinâmicos baseados no Relógio de Fábrica.
+* [ ] **Fadiga & Eficiência Individual:** Operadores terão taxas de atenção e cansaço. Operadores cansados aumentam a taxa de refugo de peças (Qualidade do OEE) e têm maior probabilidade de esquecer as máquinas ligadas ao término de um lote.
+* [ ] **Eventos de Setup (Troca de Lote):** O tempo de transição entre uma OP concluída e o início de uma nova dependerá da velocidade e habilidade do operador escalado na linha.
+
+### 📅 Fase 4 (sujeita a alterações): Inteligência Artificial (Reinforcement Learning com Gymnasium)
+* [ ] **Ambiente OpenAI Gymnasium (IA):** Envelopar todo o ecossistema consolidado dentro da especificação de ambiente do Gymnasium.
+* [ ] **Agente Gestor Autônomo:** Treinar um modelo de Aprendizado por Reforço que consumirá as leituras físicas do simulador (estados das máquinas, metas, tempo de turno) e atuará de forma autônoma decidindo velocidades de linha e paradas preventivas para otimizar o OEE geral e mitigar falhas humanas.
