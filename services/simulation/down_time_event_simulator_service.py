@@ -12,7 +12,7 @@ class DownTimeEventSimulator:
         self.db = db
         
     async def generate_event(self, line_id, op_id, type: DownTimeEventTypeEnum, severity: DownTimeSeverityEnum | None = None) -> DownTimeEventModel | None :
-        query = select(DownTimeEventModel).where(DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN and DownTimeEventModel.production_line_id == line_id)
+        query = select(DownTimeEventModel).where(DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN, DownTimeEventModel.production_line_id == line_id)
         result = await self.db.execute(query)
         events = result.scalars().all()
         
@@ -38,7 +38,7 @@ class DownTimeEventSimulator:
         return event
     
     async def update_active_event_severity(self, line_id, severity: DownTimeSeverityEnum) -> DownTimeEventModel:
-        query = select(DownTimeEventModel).where(DownTimeEventModel.production_line_id == line_id and DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN)
+        query = select(DownTimeEventModel).where(DownTimeEventModel.production_line_id == line_id, DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN)
         result = await self.db.execute(query)
         event = result.scalars().first()
         
@@ -53,7 +53,7 @@ class DownTimeEventSimulator:
         return event
     
     async def close_active_event(self, line_id):
-        query = select(DownTimeEventModel).where(DownTimeEventModel.production_order_id == line_id and DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN)
+        query = select(DownTimeEventModel).where(DownTimeEventModel.production_line_id == line_id, DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN)
         result = await self.db.execute(query)
         event = result.scalars().first()
         
