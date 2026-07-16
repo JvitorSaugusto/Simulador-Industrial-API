@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from services.production_line_service import ProductionLineService
 from services.production_order_service import ProductionOrderService
-from enums.factory_enums import LineStatusEnum
 from services.simulation.machine_simulator_service import MachineSimulator
 from services.simulation.product_order_simulator_service import ProductionOrderSimulator
 from services.simulation.production_line_simulator_service import LineSimulator
@@ -34,7 +33,7 @@ class SimulationOrchestrator:
         
         await self.machine_simulator.start_all_machines(line_id)
         
-        active_op = self.op_service.get_active_op_by_line(line_id=line_id)
+        active_op = await self.op_service.get_active_op_by_line(line_id=line_id)
         
         if not active_op:
             if auto_generate:
@@ -63,9 +62,10 @@ class SimulationOrchestrator:
             cycle_pieces = await self.line_simulator.process_line_production(line)
 
             if active_op and cycle_pieces > 0:              
-                finished_op = await self.op_simulator.process_op_state(line_id=line, op_id=op_id, cycle_pieces=cycle_pieces)
+                finished_op = await self.op_simulator.process_op_state(line_id=line.id, op_id=op_id, cycle_pieces=cycle_pieces)
                 
                 if finished_op:
+                    # adicionar randomização para algumas vezes as maquinas continuarem rodando sem op, permitindo mais eventos de ociosidade, simulando falha humana
                     await self.machine_simulator.idle_all_machines(line.id)
             
             # abrir um evento pra registrar produção sem OP
