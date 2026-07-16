@@ -27,4 +27,4 @@ class ProductionOrderModel(Base):
     actual_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     production_line_id: Mapped[int] = mapped_column(ForeignKey("production_lines.id", ondelete="CASCADE"))
     production_line: Mapped[ProductionLineModel] = relationship(back_populates="production_orders")
-    oees_records: Mapped[List[OeeRecordModel]] = relationship(back_populates="production_orders") 
+    oees_records: Mapped[List[OeeRecordModel]] = relationship(back_populates="production_order") 
