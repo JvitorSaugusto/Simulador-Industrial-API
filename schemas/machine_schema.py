@@ -18,7 +18,8 @@ class MachineResponseSchema(BaseModel):
     production_line_id: int
     last_start_time: datetime | None
     last_stop_time: datetime | None
-    last_maintenance_date: datetime | None
+    maintenance_start_at: datetime | None
+    maintenance_end_at: datetime | None
     status: MachineStatusEnum
     
     model_config = {
