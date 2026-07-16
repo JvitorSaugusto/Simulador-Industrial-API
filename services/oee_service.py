@@ -103,5 +103,8 @@ class OeeRecordService:
             timestamp=oee_start_period
         )
         
+        self.db.add(oee)
+        await self.db.commit()
+        
         return oee
   
