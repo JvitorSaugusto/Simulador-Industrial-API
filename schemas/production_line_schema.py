@@ -15,7 +15,6 @@ class ProductionLineResponseSchema(BaseModel):
     target_oee: float
     ideal_production_rate: float
     current_production_rate: float
-    production_rate: float
     total_runtime_minutes: int
     
     model_config = {
