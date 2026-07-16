@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from enums.factory_enums import DownTimeEventStatusEnum, DownTimeEventTypeEnum, DownTimeSeverityEnum
+from enums.factory_enums import DownTimeEventStatusEnum, DownTimeEventTypeEnum
 from errors.exceptions import NotFoundException
 from models.down_time_model import DownTimeEventModel
 from schemas.down_time_schema import DownTimeUpdateSchema
@@ -13,11 +13,11 @@ class DownTimeService:
     def __init__(self, db: AsyncSession):
         self.db = db
         
-    async def create_down_time_event(self, machine_id: int, type: DownTimeEventTypeEnum):
+    async def create_down_time_event(self, line_id: int, type: DownTimeEventTypeEnum):
         # Vai ser chamado no machine service na mudança de status == STOP || MAINTENANCE
         start_time = datetime.now(timezone.utc)
         new_event = DownTimeEventModel(
-            machine_id=machine_id,
+            line_id=line_id,
             type=type,
             start_time=start_time,
             reason="Não classificada"
