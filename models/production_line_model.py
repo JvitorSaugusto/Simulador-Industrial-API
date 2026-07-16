@@ -18,7 +18,7 @@ class ProductionLineModel(Base):
     ideal_production_rate: Mapped [float]  = mapped_column(Float)
     current_production_rate: Mapped [float]  = mapped_column(Float, default=0.0)
     total_produced: Mapped [float]  = mapped_column(Float, default=0.0)
-    total_runtime_minutes: Mapped [int]  = mapped_column(Integer)
+    total_runtime_minutes: Mapped [int]  = mapped_column(Integer, default=0)
     machines: Mapped[List[MachineModel | None]] = relationship(back_populates="production_line")
     production_orders: Mapped[List[ProductionOrderModel | None]] = relationship(back_populates="production_line")
     simulation_status: Mapped[LineStatusEnum] = mapped_column(SQLEnum(LineStatusEnum), default=LineStatusEnum.IDLE, nullable=False)
