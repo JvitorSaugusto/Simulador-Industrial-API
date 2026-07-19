@@ -1,3 +1,5 @@
+import random
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from services.production_line_service import ProductionLineService
 from services.production_order_service import ProductionOrderService
@@ -23,9 +25,6 @@ class SimulationOrchestrator:
             
             if auto_generate_op:
                 await self.op_simulator.generate_op_mock(line.id)
-  
-        
-        
         
     async def start_simulation_line(self, line_id, auto_generate: bool):
                
@@ -66,7 +65,8 @@ class SimulationOrchestrator:
                 
                 if finished_op:
                     # adicionar randomização para algumas vezes as maquinas continuarem rodando sem op, permitindo mais eventos de ociosidade, simulando falha humana
-                    await self.machine_simulator.idle_all_machines(line.id)
+                    if random.random() > 0.20:
+                        await self.machine_simulator.idle_all_machines(line.id)
             
             # abrir um evento pra registrar produção sem OP
          
