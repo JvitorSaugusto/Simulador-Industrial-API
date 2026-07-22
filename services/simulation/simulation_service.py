@@ -1,21 +1,24 @@
 import random
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from enums.factory_enums import DownTimeEventTypeEnum
 from services.production_line_service import ProductionLineService
 from services.production_order_service import ProductionOrderService
+from services.simulation.down_time_event_simulator_service import DownTimeEventSimulator
 from services.simulation.machine_simulator_service import MachineSimulator
-from services.simulation.product_order_simulator_service import ProductionOrderSimulator
+from services.simulation.production_order_simulator_service import ProductionOrderSimulator
 from services.simulation.production_line_simulator_service import LineSimulator
 
 #maestro dos outros simulators services
 class SimulationOrchestrator:
-    def __init__(self, db: AsyncSession, op_service: ProductionOrderService, op_simulator: ProductionOrderSimulator, machine_simulator: MachineSimulator, line_simulator: LineSimulator, line_service: ProductionLineService):
+    def __init__(self, db: AsyncSession, op_service: ProductionOrderService, op_simulator: ProductionOrderSimulator, machine_simulator: MachineSimulator, line_simulator: LineSimulator, line_service: ProductionLineService, down_time_simulator: DownTimeEventSimulator):
         self.db = db
         self.op_service = op_service
         self.op_simulator = op_simulator
         self.machine_simulator = machine_simulator
         self.line_simulator = line_simulator
         self.line_service = line_service
+        self.down_time_simulator = down_time_simulator
 
     async def initialize_simulation(self, quantity_lines: int, machines_per_line: int, auto_generate_op: bool):
         created_lines = await self.line_simulator.generate_line_mock(quantity_lines)
@@ -60,15 +63,21 @@ class SimulationOrchestrator:
             
             cycle_pieces = await self.line_simulator.process_line_production(line)
 
-            if active_op and cycle_pieces > 0:              
+            if active_op:              
                 finished_op = await self.op_simulator.process_op_state(line_id=line.id, op_id=op_id, cycle_pieces=cycle_pieces)
                 
                 if finished_op:
-                    # adicionar randomização para algumas vezes as maquinas continuarem rodando sem op, permitindo mais eventos de ociosidade, simulando falha humana
-                    if random.random() > 0.20:
+                    if random.random() > 0.20: #chance das maquina não desligarem no fim de uma op
                         await self.machine_simulator.idle_all_machines(line.id)
-            
-            # abrir um evento pra registrar produção sem OP
+                
+            else:
+                await self.down_time_simulator.generate_event(line_id=line.id, type=DownTimeEventTypeEnum.UNDEFINED_PRODUCTION)
+                
+                if random.random() > 0.20: #chance de adiar o inicio de uma op, simulando atrasos
+                    await self.op_simulator.start_op(line.id)
+                    await self.down_time_simulator.close_active_event(line.id)
+                    
+                await self.op_simulator.auto_generate_ops_backlog(line.id)
          
         await self.db.commit()
                 
