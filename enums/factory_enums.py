@@ -19,6 +19,7 @@ class DownTimeEventTypeEnum(str, Enum):
     FAILURE = "failure"
     PREVENTIVE = "preventive_maintenance"
     INSPECTION = "inspection"
+    UNDEFINED_PRODUCTION = "undefined_production"
     
 class DownTimeSeverityEnum(str, Enum):
     LOW = "low"

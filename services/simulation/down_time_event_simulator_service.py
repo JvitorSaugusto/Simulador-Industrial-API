@@ -11,7 +11,7 @@ class DownTimeEventSimulator:
     def __init__(self, db: AsyncSession):
         self.db = db
         
-    async def generate_event(self, line_id, op_id, type: DownTimeEventTypeEnum, severity: DownTimeSeverityEnum | None = None) -> DownTimeEventModel | None :
+    async def generate_event(self, line_id, type: DownTimeEventTypeEnum, severity: DownTimeSeverityEnum | None = None, op_id: int | None = None) -> DownTimeEventModel | None :
         query = select(DownTimeEventModel).where(DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN, DownTimeEventModel.production_line_id == line_id)
         result = await self.db.execute(query)
         events = result.scalars().all()
@@ -21,14 +21,20 @@ class DownTimeEventSimulator:
         
         event_data = {
         "production_line_id": line_id,
-        "production_order_id": op_id,
         "type": type,
         "reason": "Parada operacional genérica"
         }
+        
+        if op_id:
+            event_data["production_order_id"] = op_id
 
         if type == DownTimeEventTypeEnum.FAILURE:
             event_data["severity"] = severity
             event_data["reason"] = "Favor preencher após manutenção"
+            event_data["start_time"] = datetime.now(timezone.utc)
+        
+        if type == DownTimeEventTypeEnum.UNDEFINED_PRODUCTION:
+            event_data["reason"] = "Produção sem ordem de produção ativa"
             event_data["start_time"] = datetime.now(timezone.utc)
 
         event = DownTimeEventModel(**event_data)
