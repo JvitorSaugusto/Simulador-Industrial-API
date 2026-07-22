@@ -93,7 +93,7 @@ class ProductionOrderService:
         return result.scalars().all()
     
     async def get_active_op_by_line(self, line_id) -> ProductionOrderModel | None:
-        query = select(ProductionOrderModel).where(ProductionOrderModel.production_line_id == line_id)
+        query = select(ProductionOrderModel).where(ProductionOrderModel.production_line_id == line_id, ProductionOrderModel.status == ProductionOrderEnum.PRODUCTION)
         result = await self.db.execute(query)
         
         return result.scalars().first()
