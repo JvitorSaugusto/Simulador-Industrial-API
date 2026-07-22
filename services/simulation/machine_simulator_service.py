@@ -107,7 +107,7 @@ class MachineSimulator:
                     machine.maintenance_start_at = self._calculate_future_date_random()
                     machine.breakdown_count += 1 # futuramente teremos lógicas temporais de manutenção preventiva
                     
-                    await self.down_event_simulator.generate_event(line_id, op_id, DownTimeEventTypeEnum.FAILURE)
+                    await self.down_event_simulator.generate_event(line_id=line_id, op_id=op_id, type=DownTimeEventTypeEnum.FAILURE)
                     
                     machine.status = MachineStatusEnum.STOP
             
