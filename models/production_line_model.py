@@ -1,11 +1,13 @@
 from decimal import Decimal
-from typing import List
+from typing import TYPE_CHECKING, List
 from sqlalchemy import Enum as SQLEnum, String, Integer, Text, Numeric, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 from enums.factory_enums import LineStatusEnum
-from models.machine_model import MachineModel
-from models.production_order_model import ProductionOrderModel
+
+if TYPE_CHECKING:
+    from models.machine_model import MachineModel
+    from models.production_order_model import ProductionOrderModel
 
 
 class ProductionLineModel(Base):
@@ -19,6 +21,6 @@ class ProductionLineModel(Base):
     current_production_rate: Mapped [float]  = mapped_column(Float, default=0.0)
     total_produced: Mapped [float]  = mapped_column(Float, default=0.0)
     total_runtime_minutes: Mapped [int]  = mapped_column(Integer, default=0)
-    machines: Mapped[List[MachineModel | None]] = relationship(back_populates="production_line")
-    production_orders: Mapped[List[ProductionOrderModel | None]] = relationship(back_populates="production_line")
+    machines: Mapped[List["MachineModel"]] = relationship("MachineModel", back_populates="production_line")
+    production_orders: Mapped[List["ProductionOrderModel"]] = relationship("ProductionOrderModel", back_populates="production_line")
     simulation_status: Mapped[LineStatusEnum] = mapped_column(SQLEnum(LineStatusEnum), default=LineStatusEnum.IDLE, nullable=False)

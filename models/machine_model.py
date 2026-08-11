@@ -19,7 +19,7 @@ class MachineModel(Base):
     wear_level: Mapped[float] = mapped_column(default=0.0)
     breakdown_count: Mapped[int] = mapped_column(default=0) # futuramente teremos lógicas temporais de manutenção preventiva
     production_line_id: Mapped[int | None] = mapped_column(ForeignKey("production_lines.id", ondelete="CASCADE"))
-    production_line: Mapped["ProductionLineModel | None"] = relationship(back_populates="machines")
+    production_line: Mapped["ProductionLineModel | None"] = relationship("ProductionLineModel", back_populates="machines")
     last_start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_stop_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     maintenance_start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

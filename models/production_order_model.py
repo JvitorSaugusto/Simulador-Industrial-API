@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -8,6 +8,10 @@ from database import Base
 from enums.factory_enums import ProductionOrderEnum
 
 
+if TYPE_CHECKING:
+    from models.production_line_model import ProductionLineModel
+    from models.oee_model import OeeRecordModel
+    
 class ProductionOrderModel(Base):
     __tablename__= "production_orders"
     

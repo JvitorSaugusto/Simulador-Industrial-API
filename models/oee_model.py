@@ -1,11 +1,14 @@
 from datetime import datetime, timezone
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
 
+if TYPE_CHECKING:
+    from models.production_order_model import ProductionOrderModel
 
 class OeeRecordModel(Base):
     __tablename__="oee_records"
