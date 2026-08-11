@@ -1,4 +1,4 @@
-# 🏭 Industrial Digital Twin API
+# 🏭 Industria Digital Twin API
 
 Uma API assíncrona de alta performance desenvolvida em **Python** para simulação de ambientes industriais, gerenciamento de linhas de produção, monitoramento de máquinas e cálculo automatizado de indicadores de eficiência (**OEE - Overall Equipment Effectiveness**).
 
