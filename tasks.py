@@ -1,3 +1,4 @@
+import models
 from datetime import timedelta
 import asyncio
 from database import async_session_env
@@ -16,7 +17,7 @@ from services.machine_service import MachineService
 
 app = Celery('simulador_industrial', broker='redis://localhost:6379/0')
 
-@app.task(bind=True, max_retries=5, default_retry_delay=10)
+@app.task(bind=True, name="simulate_factory_tick", max_retries=5, default_retry_delay=10)
 def simulate_factory_tick(self):
     try:
         asyncio.run(run_factory_simulation_logic())
