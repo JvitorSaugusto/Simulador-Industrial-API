@@ -20,4 +20,4 @@ class DownTimeEventModel(Base):
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     end_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[DownTimeEventStatusEnum] = mapped_column(SQLEnum(DownTimeEventStatusEnum), default=DownTimeEventStatusEnum.OPEN)
-    duration: Mapped[float] = mapped_column(Float)
+    duration: Mapped[float | None] = mapped_column(Float, nullable=True)
