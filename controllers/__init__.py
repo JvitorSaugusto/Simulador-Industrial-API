@@ -1,3 +1,4 @@
+from controllers import simulator_controller as simulator_router
 from controllers.down_time_controller import router as down_time_router
 from controllers.machine_controller import router as machine_router
 from controllers.production_line_controller import router as production_line_router
@@ -8,4 +9,5 @@ __all__ = [
     "machine_router",
     "production_line_router",
     "production_order_router",
+    "simulator_router"
 ]
