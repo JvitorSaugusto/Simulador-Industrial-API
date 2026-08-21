@@ -3,13 +3,12 @@ from fastapi.responses import JSONResponse
 from errors.errors_domain.production_order_errors import ProductionOrderInvalidStatusException
 from errors.exceptions import NotFoundException
 
-
 def register_exception_handlers(app: FastAPI) -> None:
     
     @app.exception_handler(NotFoundException)
-    async def not_found_handler(request: Request, exc: str):
-        return JSONResponse(status_code=404, content={"detail": f"{exc} não encontrado(a)."})
+    async def not_found_handler(request: Request, exc: NotFoundException): # 👈 Tipo corrigido
+        return JSONResponse(status_code=404, content={"detail": f"{exc.resource_name} não encontrado(a)."}) 
     
     @app.exception_handler(ProductionOrderInvalidStatusException)
-    async def op_invalid_status(request: Request, exc: str):
-        return JSONResponse(status_code=400, content={"detail": f"{exc}"})
+    async def op_invalid_status(request: Request, exc: ProductionOrderInvalidStatusException): # 👈 Tipo corrigido
+        return JSONResponse(status_code=400, content={"detail": f"Status inválido para a OP: {exc.op_code}"})
