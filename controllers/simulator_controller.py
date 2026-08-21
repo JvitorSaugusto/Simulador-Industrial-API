@@ -12,7 +12,7 @@ async def initialize_simulation(payload: InitializeSimulationRequestSchema, orch
     return {"message": "Simulação inicializada com sucesso"}
 
 
-@router.post("/start_line", status_code=201)
+@router.put("/start_line" ,status_code=200)
 async def start_simulation_line(payload: SimulationLineInitRequestSchema, orchestrator: SimulationOrchestrator = Depends(get_orchestrator.get_simulation_service)):
     await orchestrator.start_simulation_line(line_id=payload.line_id, auto_generate=payload.auto_generate)
     return {
@@ -21,3 +21,9 @@ async def start_simulation_line(payload: SimulationLineInitRequestSchema, orches
         "status": "RUNNING",
         "auto_generate_op": payload.auto_generate
     }
+    
+@router.put("/restart_line/{line_id}", status_code=200)
+async def restart_simulation_line(line_id: int, orchestrator: SimulationOrchestrator = Depends(get_orchestrator.get_simulation_service)): 
+    await orchestrator.restart_simulation_line(line_id)
+    
+    return {"message": f"Comando de reinício enviado para a linha {line_id}"}
