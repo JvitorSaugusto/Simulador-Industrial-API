@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from enums.factory_enums import LineStatusEnum
+
 
 class ProductionLineRequestSchema(BaseModel):
     name: str
@@ -16,6 +18,7 @@ class ProductionLineResponseSchema(BaseModel):
     ideal_production_rate: float
     current_production_rate: float
     total_runtime_minutes: int
+    simulation_status: LineStatusEnum
     
     model_config = {
         "from_attributes": True
