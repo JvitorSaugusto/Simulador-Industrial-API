@@ -12,6 +12,10 @@ def get_down_time_service(db: AsyncSession = Depends(get_db)) -> DownTimeService
     return DownTimeService(db)
 
 
+@router.get("/", status_code=200)
+async def list_all_events(service: DownTimeService = Depends(get_down_time_service)):\
+    return await service.list_all_events()
+    
 @router.put("/{event_id}", response_model=DownTimeResponseSchema, status_code=200)
 async def justify_down_time_event(payload: DownTimeUpdateSchema, event_id: int, service: DownTimeService = Depends(get_down_time_service)):
     return await service.justify_down_time_event(payload=payload, event_id=event_id)

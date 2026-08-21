@@ -12,7 +12,14 @@ from schemas.down_time_schema import DownTimeUpdateSchema
 class DownTimeService:
     def __init__(self, db: AsyncSession):
         self.db = db
-        
+    
+    async def list_all_events(self):
+        query = select(DownTimeEventModel)
+        result = await self.db.execute(query)
+        events = result.scalars().all()
+            
+        return events
+           
     async def create_down_time_event(self, line_id: int, type: DownTimeEventTypeEnum):
         # Vai ser chamado no machine service na mudança de status == STOP || MAINTENANCE
         start_time = datetime.now(timezone.utc)
@@ -70,3 +77,13 @@ class DownTimeService:
             return True
         return False
         
+    async def delete_all_events_in_line(self, line_id: int) -> bool:
+        query = select(DownTimeEventModel).where(DownTimeEventModel.production_line_id == line_id)
+        result = await self.db.execute(query)
+        events = result.scalars().all()
+        
+        if events:
+            await self.db.delete(events)
+            await self.db.commit()
+            return True
+        return False
