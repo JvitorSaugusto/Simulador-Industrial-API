@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from enums.factory_enums import DownTimeEventStatusEnum, DownTimeEventTypeEnum, DownTimeSeverityEnum
 from models.down_time_model import DownTimeEventModel
 from errors.exceptions import NotFoundException
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 class DownTimeEventSimulator:
     def __init__(self, db: AsyncSession):
@@ -43,13 +46,15 @@ class DownTimeEventSimulator:
         
         return event
     
-    async def update_active_event_severity(self, line_id, severity: DownTimeSeverityEnum) -> DownTimeEventModel:
+    async def update_active_event_severity(self, line_id, severity: DownTimeSeverityEnum) -> DownTimeEventModel | None:
         query = select(DownTimeEventModel).where(DownTimeEventModel.production_line_id == line_id, DownTimeEventModel.status == DownTimeEventStatusEnum.OPEN)
         result = await self.db.execute(query)
         event = result.scalars().first()
         
         if not event:
-            raise NotFoundException("evento")
+            logger.debug(f"Tentou atualizar evento da linha/máquina {line_id}, mas não havia evento aberto. Ignorando.")
+            return None
+                    
         
         event.severity = severity
         
@@ -64,7 +69,8 @@ class DownTimeEventSimulator:
         event = result.scalars().first()
         
         if not event:
-            raise NotFoundException("Evento")
+            logger.debug(f"Tentou fechar evento da linha/máquina {line_id}, mas não havia evento aberto. Ignorando.")
+            return None
         
         end_time = datetime.now(timezone.utc)
         duration_minutes = (end_time - event.start_time).total_seconds() / 60
