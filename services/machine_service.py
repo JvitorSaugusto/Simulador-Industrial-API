@@ -51,11 +51,11 @@ class MachineService:
 
         for key, value in updated_data.items():
             setattr(machine_data, key, value)
-            
-        if machine_data.status == MachineStatusEnum.STOP:
-            await self.downtime_service.create_down_time_event(machine_id=machine_data.id, type=DownTimeEventTypeEnum.FAILURE)
-        elif machine_data.status == MachineStatusEnum.MAINTENANCE:
-            await self.downtime_service.create_down_time_event(machine_id=machine_data.id, type=DownTimeEventTypeEnum.PREVENTIVE)
+        # aqui embaixo tenho q pegar o line id    -- consertar !!
+        # if machine_data.status == MachineStatusEnum.STOP:
+        #     await self.downtime_service.create_down_time_event(machine_id=machine_data.id, type=DownTimeEventTypeEnum.FAILURE)
+        # elif machine_data.status == MachineStatusEnum.MAINTENANCE:
+        #     await self.downtime_service.create_down_time_event(machine_id=machine_data.id, type=DownTimeEventTypeEnum.PREVENTIVE)
                
         await self.db.commit()
         await self.db.refresh(machine_data)
