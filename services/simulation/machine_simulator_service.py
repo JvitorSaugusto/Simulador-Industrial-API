@@ -9,7 +9,7 @@ from services.machine_service import MachineService
 from typed_dicts.machine_start_result import MachineStartResult
 
 import random
-
+import logging
 from schemas.machine_schema import MachineRequestSchema
 from services.simulation.down_time_event_simulator_service import DownTimeEventSimulator
 
@@ -27,6 +27,8 @@ MOCK_MACHINE_NAMES = [
         "Forno de Tratamento Térmico FT-01"
     ]
 
+logger = logging.getLogger(__name__)
+
 class MachineSimulator:
     def __init__(self, db: AsyncSession, down_event_simulator: DownTimeEventSimulator, machine_service: MachineService):
         self.db = db
@@ -38,15 +40,22 @@ class MachineSimulator:
         machine.wear_level += increment_wear
         
     def _calculate_failure_rate(self, machine: MachineModel) -> float:
-        failure_rate = machine.base_failure_rate + machine.wear_level * 0.001
+        brute_rate = machine.base_failure_rate + (machine.wear_level * 0.001)
         
-        return failure_rate
+        percent = brute_rate / 100.0
         
-    def _calculate_future_date_random(self) -> datetime:
+        failure_rate_per_tick = percent / 100.0
+        
+        return failure_rate_per_tick
+        
+    def _calculate_future_date_random(self, time_unit) -> datetime:
         seconds_to_wait = random.randint(10, 30)
         now = datetime.now(timezone.utc)
-        future_date = now + timedelta(seconds=seconds_to_wait)
         
+        if time_unit == 'seconds':
+            future_date = now + timedelta(seconds=seconds_to_wait)
+        elif time_unit == 'minutes':
+            future_date = now + timedelta(minutes=seconds_to_wait)
         return future_date
     
     def _future_date_by_severity(self, severity, future_date) -> datetime:
@@ -65,7 +74,14 @@ class MachineSimulator:
         machines = result.scalars().all()
         
         if not machines:
-            raise NotFoundException("Linhas de produção")
+            logger.warning(f"Tentativa de iniciar máquinas: Nenhuma máquina em estado IDLE encontrada na linha {line_id}.")
+            
+            return {
+            'success_count': 0,
+            'failed_count': 0,
+            'all_started': False,
+            'message': 'Nenhuma máquina em estado IDLE encontrada na linha!'
+        }
         
         success_start_machine = 0
         failed_start_machine = 0
@@ -86,7 +102,7 @@ class MachineSimulator:
         }
         
     async def idle_all_machines(self, line_id):
-        query = select(MachineModel).where(MachineModel.production_line_id == line_id)
+        query = select(MachineModel).where(MachineModel.production_line_id == line_id, MachineModel.status != MachineStatusEnum.MAINTENANCE)
         result = await self.db.execute(query)
         machines = result.scalars().all()
         
@@ -104,7 +120,7 @@ class MachineSimulator:
                 self._add_wear_per_cycle(machine)
                  
                 if random.random() < failure_rate:
-                    machine.maintenance_start_at = self._calculate_future_date_random()
+                    machine.maintenance_start_at = self._calculate_future_date_random('seconds')
                     machine.breakdown_count += 1 # futuramente teremos lógicas temporais de manutenção preventiva
                     
                     await self.down_event_simulator.generate_event(line_id=line_id, op_id=op_id, type=DownTimeEventTypeEnum.FAILURE)
@@ -113,12 +129,15 @@ class MachineSimulator:
             
             elif machine.status == MachineStatusEnum.STOP:
                 if machine.maintenance_start_at and machine.maintenance_start_at <= datetime.now(timezone.utc):
-                    machine.maintenance_end_at =  self._calculate_future_date_random()
+                    machine.maintenance_end_at =  self._calculate_future_date_random('minutes')
                     
                     machine.status = MachineStatusEnum.MAINTENANCE
                     
                     severity = random.choice(list(DownTimeSeverityEnum))
-                    await self.down_event_simulator.update_active_event_severity(machine.id, severity)
+                    try:
+                        await self.down_event_simulator.update_active_event_severity(machine.id, severity)
+                    except NotFoundException:
+                        logger.debug(f"Nenhum evento ativo para atualizar na máquina {machine.id}. Ignorando.")
                     machine.maintenance_end_at = self._future_date_by_severity(severity, machine.maintenance_end_at)
                     
             elif machine.status == MachineStatusEnum.MAINTENANCE:
