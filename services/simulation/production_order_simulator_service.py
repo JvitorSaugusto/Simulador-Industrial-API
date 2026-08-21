@@ -13,6 +13,7 @@ from schemas.production_order_schema import ProductionOrderRequestSchema
 from services.machine_service import MachineService
 from services.production_order_service import ProductionOrderService
 from services.simulation.machine_simulator_service import MachineSimulator
+from models.machine_model import MachineModel
 
 
 MOCK_PRODUCTION_ORDERS = [
@@ -65,23 +66,57 @@ class ProductionOrderSimulator:
             op.quantity_bad = random.randint(0, cycle_pieces)
             op.quantity_good = op.quantity_produced - op.quantity_bad            
             
-    async def _start_op(self, line_id):
-        query = (select(ProductionOrderModel)
-        .where(ProductionOrderModel.production_line_id == line_id, ProductionOrderModel.planned_start >= datetime.now(timezone.utc))
-        .order_by(ProductionOrderModel.planned_start.asc())
+    async def _start_op(self, line_id) -> bool:
+        query_machines_stopped = select(MachineModel).where(
+        MachineModel.production_line_id == line_id,
+        MachineModel.status.in_([MachineStatusEnum.MAINTENANCE, MachineStatusEnum.STOP])
+        )
+        result_machines_stopped = await self.db.execute(query_machines_stopped)
+        
+        if result_machines_stopped.scalars().first():
+            return False
+        
+        query_op_stopped = select(ProductionOrderModel).where(
+            ProductionOrderModel.production_line_id == line_id,
+            ProductionOrderModel.status == ProductionOrderEnum.STOP
         )
         
-        result = await self.db.execute(query)
-        op = result.scalars().first()
+        result_op_stopped = await self.db.execute(query_op_stopped)
+        op_stopped = result_op_stopped.scalars().first()
+        
+        if op_stopped:
+            op_stopped.status = ProductionOrderEnum.PRODUCTION
+            await self.machine_simulator.start_all_machines(line_id) 
+            return True
+        
+        query_op_exist = (select(ProductionOrderModel)
+            .where(ProductionOrderModel.production_line_id == line_id, 
+                    ProductionOrderModel.status.in_([ProductionOrderEnum.PRODUCTION, ProductionOrderEnum.STOP]))
+            )
+        result_op_exist = await self.db.execute(query_op_exist)
+        
+        if result_op_exist.scalars().first():
+            return False
+        
+        query_new_op = (select(ProductionOrderModel)
+            .where(ProductionOrderModel.production_line_id == line_id, 
+                ProductionOrderModel.status == ProductionOrderEnum.PENDING, 
+                ProductionOrderModel.planned_start <= datetime.now(timezone.utc))
+            .order_by(ProductionOrderModel.planned_start.asc())
+        )   
 
-        if op is None:
-            raise NotFoundException("op")
-        
-        
-        if op.planned_start <= datetime.now(timezone.utc):
-            op.status = ProductionOrderEnum.PRODUCTION
-        
+        result_new_op = await self.db.execute(query_new_op)
+        op_new_op = result_new_op.scalars().first()
+
+        if op_new_op:
+            op_new_op.status = ProductionOrderEnum.PRODUCTION
+            op_new_op.actual_start = datetime.now(timezone.utc)
             
+            await self.machine_simulator.start_all_machines(line_id)
+            return True
+        
+        return False
+    
                 
     async def process_op_state(self, op_id, line_id, cycle_pieces) -> bool:
         op = await self.db.get(ProductionOrderModel, op_id)
