@@ -3,6 +3,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from enums.factory_enums import DownTimeEventTypeEnum
+from services.down_time_service import DownTimeService
 from services.production_line_service import ProductionLineService
 from services.production_order_service import ProductionOrderService
 from services.simulation.down_time_event_simulator_service import DownTimeEventSimulator
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 #maestro dos outros simulators services
 class SimulationOrchestrator:
-    def __init__(self, db: AsyncSession, op_service: ProductionOrderService, op_simulator: ProductionOrderSimulator, machine_simulator: MachineSimulator, line_simulator: LineSimulator, line_service: ProductionLineService, down_time_simulator: DownTimeEventSimulator):
+    def __init__(self, db: AsyncSession, op_service: ProductionOrderService, op_simulator: ProductionOrderSimulator, machine_simulator: MachineSimulator, line_simulator: LineSimulator, line_service: ProductionLineService, down_time_simulator: DownTimeEventSimulator, down_time_service: DownTimeService):
         self.db = db
         self.op_service = op_service
         self.op_simulator = op_simulator
@@ -23,6 +24,7 @@ class SimulationOrchestrator:
         self.line_simulator = line_simulator
         self.line_service = line_service
         self.down_time_simulator = down_time_simulator
+        self.down_time_service = down_time_service
 
     async def initialize_simulation(self, quantity_lines: int, machines_per_line: int, auto_generate_op: bool):
         logger.info("Iniciando inicialização da simulação (quantity_lines=%s, machines_per_line=%s, auto_generate_op=%s)", quantity_lines, machines_per_line, auto_generate_op,)
@@ -58,7 +60,10 @@ class SimulationOrchestrator:
                 logger.warning("Linha iniciada sem OP ativa e sem geração automática (line_id=%s)", line_id)
         else:
             logger.debug("OP ativa já existente encontrada para a linha (line_id=%s, op_id=%s)", line_id, active_op.id)
-
+    
+    async def restart_simulation_line(self, line_id):
+        await self.down_time_service.delete_all_events_in_line(line_id)
+        await self.machine_simulator.idle_all_machines(line_id)
             
     async def process_factory_tick(self):
         """
@@ -78,6 +83,7 @@ class SimulationOrchestrator:
 
         for line in running_lines:
             active_op = await self.op_service.get_active_op_by_line(line.id)
+            success_op_start = None
             op_id = active_op.id if active_op else None
 
             await self.machine_simulator.process_machine_states(line_id=line.id, op_id=op_id,)
@@ -99,22 +105,23 @@ class SimulationOrchestrator:
                         logger.warning("Simulação manteve máquinas ligadas após término da OP (line_id=%s)", line.id,)
                 
             else:
-                logger.warning("Linha em execução sem OP ativa. Registrando evento de parada (line_id=%s)", line.id,)
-                await self.down_time_simulator.generate_event(line_id=line.id, type=DownTimeEventTypeEnum.UNDEFINED_PRODUCTION)
-                logger.debug("Evento de produção indefinida registrado (line_id=%s)", line.id)
+                success_op_start = False
                 
-                if random.random() > 0.20: #chance de adiar o inicio de uma op, simulando atrasos
-                    logger.info("Iniciando OP e encerrando evento de parada na linha (line_id=%s)", line.id,)
-                    
-                    await self.op_simulator.start_op(line.id)
+                if random.random() > 0.20:
+                    logger.info(f"Tentando iniciar OP para a linha {line.id}")
+                    success_op_start = await self.op_simulator.start_op(line.id)
+
+                if success_op_start:
                     await self.down_time_simulator.close_active_event(line.id)
-                    logger.debug("Evento de parada encerrado após início da OP (line_id=%s)", line.id)
+                    logger.debug(f"OP iniciada. Linha {line.id} voltou a produzir.")
+                
                 else:
-                    logger.warning("Simulando atraso estocástico no início da próxima OP (line_id=%s)", line.id,)
-                    
-                logger.debug("Gerando backlog automático de OPs para a linha (line_id=%s)", line.id,)
-                await self.op_simulator.auto_generate_ops_backlog(line.id)
-                logger.debug("Backlog automático de OPs gerado com sucesso (line_id=%s)", line.id)
+                    logger.warning("Linha em execução sem OP ativa. Registrando evento de parada (line_id=%s)", line.id)
+                    await self.down_time_simulator.generate_event(
+                        line_id=line.id, 
+                        type=DownTimeEventTypeEnum.UNDEFINED_PRODUCTION
+                    )
+                    logger.debug("Evento de produção indefinida registrado (line_id=%s)", line.id)
          
         await self.db.commit()
         logger.info("Ciclo do tick da fábrica finalizado com sucesso")
