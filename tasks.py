@@ -70,7 +70,8 @@ async def run_factory_simulation_logic():
             machine_simulator=machine_simulator, 
             line_service=line_service, 
             line_simulator=line_simulator,  
-            down_time_simulator=down_time_event_simulator
+            down_time_simulator=down_time_event_simulator,
+            down_time_service=down_time_event_service
         )
         
         logger.info("[ASYNC] Chamando orchestrator.process_factory_tick()...")
@@ -81,9 +82,9 @@ async def run_factory_simulation_logic():
 # CONFIG DO BEAT - depois adicionar o red beat
 app.conf.beat_schedule = {
     # Primeira Task: Responsável por rodar o ciclo da fábrica
-    'executar-ciclo-da-fabrica-a-cada-20s': {
+    'executar-ciclo-da-fabrica-a-cada-30s': {
         'task': 'simulate_factory_tick',
-        'schedule': 20.0,
+        'schedule': 30.0,
     },
     
     # Segunda Task:  tirar a foto do OEE a cada 1 minuto
