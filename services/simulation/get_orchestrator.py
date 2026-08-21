@@ -31,7 +31,8 @@ def get_simulation_service(db: AsyncSession = Depends(get_db)) -> SimulationOrch
         machine_simulator=machine_simulator, 
         line_service=line_service, 
         line_simulator=line_simulator,  
-        down_time_simulator=down_time_event_simulator
+        down_time_simulator=down_time_event_simulator,
+        down_time_service=down_time_event_service
     )
             
     return orchestrator
