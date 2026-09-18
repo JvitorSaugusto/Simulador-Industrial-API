@@ -1,0 +1,124 @@
+:root {
+    /* Cores principais - modo claro */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --accent-primary: #4a90e2;
+    --accent-secondary: #50c878;
+    --warning-color: #ff6b35;
+    --danger-color: #e74c3c;
+    --success-color: #2ecc71;
+    --info-color: #3498db;
+    
+    /* Cores para modo escuro */
+    [data-theme="dark"] {
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #2d2d2d;
+        --text-primary: #ffffff;
+        --text-secondary: #cccccc;
+        --accent-primary: #64b5f6;
+        --accent-secondary: #81c784;
+        --warning-color: #ff8a65;
+        --danger-color: #ef5350;
+        --success-color: #4caf50;
+        --info-color: #4fc3f7;
+    }
+}
+
+/* Paleta industrial */
+:root {
+    --industrial-blue: #003366;
+    --industrial-gray: #4a5568;
+    --industrial-green: #2e8b57;
+    --industrial-red: #b22222;
+    --industrial-yellow: #ffd700;
+    --industrial-orange: #ff8c00;
+    --machine-card-bg: var(--bg-secondary);
+    --op-card-bg: var(--bg-secondary);
+}
+
+/* Layout principal */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+header {
+    background-color: var(--industrial-blue);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+section {
+    margin-bottom: 2rem;
+}
+
+.op-card {
+    background-color: var(--op-card-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--accent-primary);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.machine-card {
+    background-color: var(--machine-card-bg);
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.machine-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Status classes */
+.status-production {
+    border-left: 5px solid var(--success-color);
+}
+
+.status-idle {
+    border-left: 5px solid var(--text-secondary);
+}
+
+.status-maintenance {
+    border-left: 5px solid var(--danger-color);
+}
+
+/* Grid layout for machines */
+#machines {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
