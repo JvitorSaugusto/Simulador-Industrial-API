@@ -38,9 +38,35 @@
     --op-card-bg: var(--bg-secondary);
 }
 
+/* Variáveis de espaçamento */
+:root {
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+}
+
+/* Variáveis de fontes */
+:root {
+    --font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+}
+
+/* Variáveis de border-radius */
+:root {
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --border-radius-full: 50%;
+}
+
 /* Layout principal */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-primary);
     margin: 0;
     padding: 0;
     background-color: var(--bg-primary);
@@ -51,7 +77,7 @@ body {
 header {
     background-color: var(--industrial-blue);
     color: white;
-    padding: 1rem;
+    padding: var(--spacing-md);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -59,18 +85,18 @@ header {
 
 main {
     max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    margin: var(--spacing-xl) auto;
+    padding: 0 var(--spacing-md);
 }
 
 section {
-    margin-bottom: 2rem;
+    margin-bottom: var(--spacing-xl);
 }
 
 .op-card {
     background-color: var(--op-card-bg);
-    padding: 1rem;
-    border-radius: 8px;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
@@ -78,23 +104,23 @@ section {
     width: 100%;
     height: 20px;
     background-color: #e0e0e0;
-    border-radius: 10px;
+    border-radius: var(--border-radius-lg);
     overflow: hidden;
-    margin: 10px 0;
+    margin: var(--spacing-sm) 0;
 }
 
 .progress-fill {
     height: 100%;
     background-color: var(--accent-primary);
-    border-radius: 10px;
+    border-radius: var(--border-radius-lg);
     transition: width 0.5s ease;
 }
 
 .machine-card {
     background-color: var(--machine-card-bg);
-    padding: 1rem;
-    margin: 1rem 0;
-    border-radius: 8px;
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+    border-radius: var(--border-radius-md);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.2s;
 }
@@ -120,5 +146,5 @@ section {
 #machines {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1rem;
+    gap: var(--spacing-md);
 }
