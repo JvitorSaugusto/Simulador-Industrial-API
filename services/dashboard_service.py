@@ -13,7 +13,7 @@ class DashboardService:
         self.db = db
         
     async def get_line_snapshot(self, line_id) -> dict:
-        query_line = select(ProductionLineModel).where(ProductionLineModel.id == line_id, ProductionLineModel.simulation_status == LineStatusEnum.RUNNING)
+        query_line = select(ProductionLineModel).where(ProductionLineModel.id == line_id)
         result = await self.db.execute(query_line)
         line = result.scalars().first()
         
