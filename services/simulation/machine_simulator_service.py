@@ -90,6 +90,9 @@ class MachineSimulator:
             if machine.wear_level >= 95:
                 machine.status = MachineStatusEnum.STOP
                 failed_start_machine += 1
+                machine.maintenance_start_at =  self._calculate_future_date_random('seconds')
+                await self.down_event_simulator.generate_event(line_id=line_id, op_id=op_id, type=DownTimeEventTypeEnum.FAILURE)
+                                    
             else:
                 machine.status = MachineStatusEnum.PRODUCTION
                 success_start_machine += 1
@@ -134,10 +137,8 @@ class MachineSimulator:
                     machine.status = MachineStatusEnum.MAINTENANCE
                     
                     severity = random.choice(list(DownTimeSeverityEnum))
-                    try:
-                        await self.down_event_simulator.update_active_event_severity(machine.id, severity)
-                    except NotFoundException:
-                        logger.debug(f"Nenhum evento ativo para atualizar na máquina {machine.id}. Ignorando.")
+                    
+                    await self.down_event_simulator.update_active_event_severity(line_id, severity)
                     machine.maintenance_end_at = self._future_date_by_severity(severity, machine.maintenance_end_at)
                     
             elif machine.status == MachineStatusEnum.MAINTENANCE:
