@@ -1,55 +1,87 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Industrial</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel da fábrica</title>
+  <script>
+    // Aplica o tema antes de pintar a página, para não piscar.
+    try {
+      document.documentElement.dataset.theme = localStorage.getItem('theme') ||
+        (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+  </script>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/script.js" defer></script>
 </head>
-<body data-theme="dark">
-    <header>
-        <h1>Dashboard de Fabrica</h1>
-        <button id="theme-toggle">Alternar Tema</button>
-    </header>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>Painel da fábrica</h1>
+      <p id="line-name">Carregando linha</p>
+      <p id="line-meta" class="muted"></p>
+    </div>
+    <div class="controls">
+      <label class="field">
+        <span>Linha</span>
+        <select id="line-select"></select>
+      </label>
+      <button id="demo-toggle" type="button" aria-pressed="false">Dados de demonstração</button>
+      <button id="theme-toggle" type="button">Tema</button>
+    </div>
+  </header>
 
-    <main>
-        <section id="production-order">
-            <h2>Ordem de Produção</h2>
-            <div class="op-card" id="op-data">
-                <h3>Carregando...</h3>
-                <p>Produto: Widget A</p>
-                <p>Planejado: 1000 unidades</p>
-                <p>Produzido: 750 unidades</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 75%"></div>
-                </div>
-                <p>Progresso: 75%</p>
-            </div>
-        </section>
+  <div id="conn" class="conn" role="status" aria-live="polite">Conectando à API</div>
 
-        <section id="machines">
-            <h2>Máquinas</h2>
-            <div class="machine-card status-production" id="machine-1">
-                <h3>Máquina 01</h3>
-                <p>Status: Produção</p>
-                <p>Última inicialização: 10:00</p>
-                <p>Nível de desgaste: 25%</p>
-            </div>
-            <div class="machine-card status-idle" id="machine-2">
-                <h3>Máquina 02</h3>
-                <p>Status: Ociosa</p>
-                <p>Última parada: 09:30</p>
-                <p>Nível de desgaste: 15%</p>
-            </div>
-            <div class="machine-card status-maintenance" id="machine-3">
-                <h3>Máquina 03</h3>
-                <p>Status: Manutenção</p>
-                <p>Início da manutenção: 11:00</p>
-                <p>Previsão: 12:00</p>
-            </div>
-        </section>
-    </main>
+  <main>
+    <section class="oee" aria-labelledby="h-oee">
+      <div class="sec-head">
+        <h2 id="h-oee">Eficiência da linha (OEE)</h2>
+        <span id="line-status" class="badge" hidden></span>
+      </div>
+      <div class="equation">
+        <div class="tile" id="t-availability">
+          <span class="tile-label">Disponibilidade</span>
+          <strong class="tile-value" id="v-availability">—</strong>
+          <div class="bar"><span id="b-availability"></span></div>
+        </div>
+        <span class="op" aria-hidden="true">×</span>
+        <div class="tile" id="t-performance">
+          <span class="tile-label">Desempenho</span>
+          <strong class="tile-value" id="v-performance">—</strong>
+          <div class="bar"><span id="b-performance"></span></div>
+        </div>
+        <span class="op" aria-hidden="true">×</span>
+        <div class="tile" id="t-quality">
+          <span class="tile-label">Qualidade</span>
+          <strong class="tile-value" id="v-quality">—</strong>
+          <div class="bar"><span id="b-quality"></span></div>
+        </div>
+        <span class="op" aria-hidden="true">=</span>
+        <div class="tile tile-oee" id="t-oee" data-state="none">
+          <span class="tile-label">OEE <span id="target" class="muted"></span></span>
+          <strong class="tile-value" id="v-oee">—</strong>
+          <div class="bar"><span id="b-oee"></span></div>
+        </div>
+      </div>
+      <p id="oee-note" class="muted"></p>
+    </section>
 
-    <script src="script.js" defer></script>
+    <div class="two-col">
+      <section class="panel" aria-labelledby="h-op">
+        <h2 id="h-op">Ordem de produção ativa</h2>
+        <div id="op-body"></div>
+      </section>
+      <section class="panel" aria-labelledby="h-dt">
+        <h2 id="h-dt">Últimas paradas</h2>
+        <div id="downtime-list"></div>
+      </section>
+    </div>
+
+    <section aria-labelledby="h-machines">
+      <h2 id="h-machines">Máquinas</h2>
+      <div id="machines-list" class="machines"></div>
+    </section>
+  </main>
 </body>
 </html>
