@@ -1,6 +1,6 @@
 
 from datetime import datetime, timezone
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from enums.factory_enums import DownTimeEventStatusEnum, DownTimeEventTypeEnum
@@ -83,7 +83,7 @@ class DownTimeService:
         events = result.scalars().all()
         
         if events:
-            await self.db.delete(events)
+            await self.db.execute(delete(DownTimeEventModel).where(DownTimeEventModel.production_line_id == line_id))
             await self.db.commit()
             return True
         return False
