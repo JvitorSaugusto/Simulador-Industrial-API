@@ -126,14 +126,25 @@ class ProductionOrderSimulator:
         machines = await self.machine_service.get_all_machines_by_line(line_id)
         machines_list = list(machines)
 
-        # isso tem q mudar, tenho que checar se existe alguma maquina parada ao inves de todas n estarem com status produzindo, pq se n 
-        # pode ocorrer problema com outros estados de maquina por exemplo o IDLE
-        for machine in machines_list:
-            if machine.status == MachineStatusEnum.IDLE:
-                return False
+        machine_with_problem = any(
+            m.status in [MachineStatusEnum.MAINTENANCE, MachineStatusEnum.STOP] 
+            for m in machines_list
+        )
         
-        if not all(m.status == MachineStatusEnum.PRODUCTION for m in machines_list):
-            op.status = ProductionOrderEnum.STOP
+        if machine_with_problem:
+            if op.status != ProductionOrderEnum.STOP:
+                op.status = ProductionOrderEnum.STOP
+            return False
+        
+        # 2. Máquinas estão OK, mas a OP ficou esquecida em STOP? Hora de retomar! - Dps ver se vai ser isso mesmo
+        #suspeito q isso possa atrapalhar a parte de ociosidade
+        if op.status == ProductionOrderEnum.STOP:
+            await self._start_op(line_id)
+            return False
+
+        # 3. Tratamento do IDLE: A máquina tá boa, mas tá ociosa. 
+        # A OP continua em PRODUCTION, mas não contabilizamos peças neste tick.
+        if any(m.status == MachineStatusEnum.IDLE for m in machines_list):
             return False
             
         self._analyze_pieces(op, cycle_pieces)
@@ -145,7 +156,7 @@ class ProductionOrderSimulator:
         
         return False
     
-    async def start_op(self, line_id):
+    async def start_op(self, line_id) -> bool:
         query = (select(ProductionOrderModel)
         .where(ProductionOrderModel.production_line_id == line_id, ProductionOrderModel.status == ProductionOrderEnum.PENDING, ProductionOrderModel.planned_start <= datetime.now(timezone.utc))
         .order_by(ProductionOrderModel.planned_start.asc())
@@ -155,13 +166,15 @@ class ProductionOrderSimulator:
         op = result.scalars().first()
         
         if op is None:
-            return
+            return False
      
         if random.random() < 0.80:
             op.status = ProductionOrderEnum.PRODUCTION
             op.actual_start =  datetime.now(timezone.utc)
             
             await self.machine_simulator.start_all_machines(line_id)
+            return True
+        return False
     
         
     async def generate_op_mock(self, line_id):
