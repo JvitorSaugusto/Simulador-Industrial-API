@@ -52,10 +52,13 @@ class SimulationOrchestrator:
         
         active_op = await self.op_service.get_active_op_by_line(line_id=line_id)
         
+        await self.db.commit()
+        
         if not active_op:
             if auto_generate:
                 logger.info("Nenhuma OP ativa encontrada, gerando OP automática (line_id=%s)", line_id)
                 await self.op_simulator.generate_op_mock(line_id)
+                await self.db.commit()
             else:
                 logger.warning("Linha iniciada sem OP ativa e sem geração automática (line_id=%s)", line_id)
         else:
@@ -64,6 +67,7 @@ class SimulationOrchestrator:
     async def restart_simulation_line(self, line_id):
         await self.down_time_service.delete_all_events_in_line(line_id)
         await self.machine_simulator.idle_all_machines(line_id)
+        await self.db.commit()
             
     async def process_factory_tick(self):
         """
