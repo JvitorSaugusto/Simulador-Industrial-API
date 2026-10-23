@@ -18,4 +18,4 @@ ServiceDependency = Annotated[DashboardService, Depends(get_dashboard_service)]
 
 @router.get("/{line_id}", status_code=200, response_model=LineSnapshotSchema)
 async def get_dashboard_snapshot(line_id: int, service: ServiceDependency):
-    return service.get_line_snapshot(line_id=line_id)
+    return await service.get_line_snapshot(line_id=line_id)
