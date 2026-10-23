@@ -63,7 +63,8 @@ class ProductionOrderSimulator:
         
     def _analyze_pieces(self, op: ProductionOrderModel, cycle_pieces):
             op.quantity_produced += cycle_pieces
-            op.quantity_bad = random.randint(0, cycle_pieces)
+            cycle_waste = sum(1 for _ in range(cycle_pieces) if random.random() <= 0.03)
+            op.quantity_bad += cycle_waste
             op.quantity_good = op.quantity_produced - op.quantity_bad            
             
     async def _start_op(self, line_id) -> bool:
